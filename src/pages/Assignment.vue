@@ -63,7 +63,19 @@
             </q-card-section>
             <q-separator></q-separator>
             <q-card-section class="column flex-center">
-              <q-btn color="primary">Add files</q-btn>
+              <q-file
+                v-model="files"
+                :loading="loading.fileUpload"
+                label="Pick files"
+                use-chips
+                filled
+                multiple
+                append
+              >
+                <template v-slot:after>
+                  <q-btn @click="upload()" round dense flat icon="mdi-send" />
+                </template>
+              </q-file>
             </q-card-section>
           </q-card>
         </template>
@@ -73,7 +85,7 @@
 </template>
 
 <script>
-import { firestore, Timestamp } from "boot/firebase";
+import { firestore, storage, Timestamp } from "boot/firebase";
 
 export default {
   name: "Assignment",
@@ -85,7 +97,29 @@ export default {
       comments: null,
       splitterWidth: 70,
       comment: null,
+      files: null,
+      storageRef: null,
+      user: {
+        uid: this.$store.state.user.data.uid,
+        displayName: this.$store.state.user.data.displayName,
+      },
+      loading: {
+        fileUpload: false,
+      },
     };
+  },
+  async created() {
+    const course = await firestore
+      .collection("courses")
+      .doc(this.courseId)
+      .get();
+    this.storageRef = storage
+      .ref()
+      .child(
+        `files/${course.data().title}/${this.assignment.title}/${
+          this.user.displayName
+        }`
+      );
   },
   watch: {
     "$route.params.assignmentId": {
@@ -114,8 +148,8 @@ export default {
             .add({
               text: this.comment,
               user: {
-                uid: this.$store.state.user.data.uid,
-                displayName: this.$store.state.user.data.displayName,
+                uid: this.user.uid,
+                displayName: this.user.displayName,
               },
               timestamp: Timestamp.now(),
             });
@@ -123,8 +157,17 @@ export default {
         } catch (err) {
           this.$q.notify({ message: err.message, color: "red" });
         }
-      } else {
-        //
+      }
+    },
+    async upload() {
+      try {
+        this.loading.fileUpload = true;
+        await this.storageRef.child(this.files[0].name).put(this.files[0]);
+        this.files = null;
+        this.loading.fileUpload = false;
+      } catch (err) {
+        this.$q.notify({ message: err.message, color: "red" });
+        this.loading.fileUpload = false;
       }
     },
   },
