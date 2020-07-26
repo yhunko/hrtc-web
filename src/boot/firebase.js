@@ -18,10 +18,8 @@ export default async ({ store }) => {
     auth.onAuthStateChanged((user) => {
       if (user) {
         store.commit("user/set", { user });
-        resolve();
-      } else {
-        resolve();
       }
+      resolve();
     });
   });
 };
