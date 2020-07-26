@@ -25,7 +25,32 @@
             </q-card-section>
             <q-separator></q-separator>
             <q-card-section>
-              Comments here
+              <q-input v-model="comment" label="Comment" filled autogrow>
+                <template v-slot:append>
+                  <q-icon
+                    name="mdi-send"
+                    @click="sendComment()"
+                    class="cursor-pointer"
+                  />
+                </template>
+              </q-input>
+              <q-list v-if="comments">
+                <q-item
+                  v-for="({ text, user: { displayName }, timestamp },
+                  index) in comments"
+                  :key="index"
+                >
+                  <q-item-section>
+                    <q-item-label overline>{{ displayName }}</q-item-label>
+                    <q-item-label>{{ text }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side top>
+                    <q-item-label caption>{{
+                      timestamp | formatCommentTimestamp
+                    }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
             </q-card-section>
           </q-card>
         </template>
@@ -48,30 +73,59 @@
 </template>
 
 <script>
-import { firestore } from "boot/firebase";
+import { firestore, Timestamp } from "boot/firebase";
 
 export default {
   name: "Assignment",
   data() {
     return {
       id: this.$route.params.assignmentId,
+      courseId: this.$route.params.courseId,
       assignment: null,
+      comments: null,
       splitterWidth: 70,
+      comment: null,
     };
   },
   watch: {
     "$route.params.assignmentId": {
       immediate: true,
       handler(id) {
-        this.$bind(
-          "assignment",
-          firestore
-            .collection("courses")
-            .doc(this.$route.params.courseId)
-            .collection("classwork")
-            .doc(id)
-        );
+        const assignment = firestore
+          .collection("courses")
+          .doc(this.courseId)
+          .collection("classwork")
+          .doc(id);
+        this.$bind("assignment", assignment);
+        this.$bind("comments", assignment.collection("comments"));
       },
+    },
+  },
+  methods: {
+    async sendComment() {
+      if (this.comment) {
+        try {
+          await firestore
+            .collection("courses")
+            .doc(this.courseId)
+            .collection("classwork")
+            .doc(this.id)
+            .collection("comments")
+            .add({
+              text: this.comment,
+              user: {
+                uid: this.$store.state.user.data.uid,
+                displayName: this.$store.state.user.data.displayName,
+              },
+              timestamp: Timestamp.now(),
+            });
+          this.comment = "";
+        } catch (err) {
+          this.$q.notify({ message: err.message, color: "red" });
+        }
+      } else {
+        //
+      }
     },
   },
 };

@@ -7,4 +7,7 @@ export default ({ Vue }) => {
   Vue.filter("formatDueTimestamp", (timestamp) => {
     return date.formatDate(timestamp.toDate(), "MMM DD, HH:mm");
   });
+  Vue.filter("formatCommentTimestamp", (timestamp) => {
+    return date.formatDate(timestamp.toDate(), "MMM DD, HH:mm");
+  });
 };
