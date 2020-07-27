@@ -1,13 +1,13 @@
-import { date } from "quasar";
+import format from "date-fns/format";
 
 export default ({ Vue }) => {
   Vue.filter("formatTimestamp", (timestamp) => {
-    return date.formatDate(timestamp.toDate(), "MMM DD");
+    return format(timestamp.toDate(), "MMM dd");
   });
   Vue.filter("formatDueTimestamp", (timestamp) => {
-    return date.formatDate(timestamp.toDate(), "MMM DD, HH:mm");
+    return format(timestamp.toDate(), "MMM dd, HH:mm");
   });
   Vue.filter("formatCommentTimestamp", (timestamp) => {
-    return date.formatDate(timestamp.toDate(), "MMM DD, HH:mm");
+    return format(timestamp.toDate(), "MMM dd, HH:mm");
   });
 };
