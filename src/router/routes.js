@@ -7,11 +7,16 @@ const routes = [
       { path: "settings", component: () => import("pages/Settings.vue") },
       { path: "profile", component: () => import("pages/Profile.vue") },
       { path: "course/:courseId", component: () => import("pages/Course.vue") },
+      { path: "bill", component: () => import("pages/Bill.vue") },
       {
         path: "assignment/:courseId/:assignmentId",
         component: () => import("pages/Assignment.vue"),
       },
     ],
+  },
+  {
+    path: "/auth",
+    component: () => import("layouts/Auth.vue"),
   },
   {
     path: "*",

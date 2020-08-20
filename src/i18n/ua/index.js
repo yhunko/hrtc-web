@@ -1,40 +1,40 @@
-// English
+// Ukrainian
 
 export default {
   welcome: "Welcome!",
   header: "HRTC distance learning",
   drawer: {
-    settings: "Settings",
-    auth: "Authorize",
-    home: "Home",
-    profile: "Profile",
+    settings: "Налаштування",
+    auth: "Авторизація",
+    home: "Дім",
+    profile: "Профіль",
     bill: "Bill",
   },
   settings: {
-    lang: "Language",
+    lang: "Мова",
   },
   index: {
     course: {
-      open: "Open",
+      open: "Відкрити",
     },
   },
   auth: {
     form: {
       displayName: {
-        label: "Your name and surname",
+        label: "Ваше ім'я та прізвище",
         errors: {
           empty: "Please type your name and surname",
         },
       },
       email: {
-        label: "Your email",
+        label: "Ваш email",
         errors: {
           empty: "Please provide email",
           wrong: "Please provide a valid email",
         },
       },
       password: {
-        label: "Password",
+        label: "Пароль",
         errors: {
           empty: "Please provide a password",
         },

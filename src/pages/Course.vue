@@ -1,59 +1,58 @@
 <template>
   <q-page v-if="course" class="flex justify-center" padding>
-    <div
-      v-if="classwork"
-      class="q-pa-md column q-gutter-md"
-      :style="{ width: $q.screen.lt.md ? '90vw' : '50vw' }"
-    >
-      <q-card
-        v-for="({ id: assignmentId, title, timestamp, description },
-        index) in classwork"
-        :key="index"
+    <q-card :style="{ width: $q.screen.lt.md ? '90vw' : '50vw' }" flat bordered>
+      <q-tabs
+        v-model="tab"
+        class="text-grey"
+        active-color="primary"
+        indicator-color="primary"
+        align="justify"
+        narrow-indicator
       >
-        <q-card-section>
-          <div class="text-h6">{{ title }}</div>
-          <div class="text-subtitle2">
-            {{ timestamp | formatTimestamp }}
-          </div>
-        </q-card-section>
-
-        <q-card-section>
-          {{ description }}
-        </q-card-section>
-
-        <q-separator dark />
-
-        <q-card-actions>
-          <q-btn :to="`/assignment/${id}/${assignmentId}`" flat>
-            Open
-          </q-btn>
-          <q-btn flat>Action 2</q-btn>
-        </q-card-actions>
-      </q-card>
-    </div>
-    <div v-else class="column flex-center">
-      <h2>No classwork for now</h2>
-      <q-btn @click="createTaskModal = true">Click to create a new task</q-btn>
-    </div>
-    <q-page-sticky position="bottom-right" :offset="[15, 15]">
+        <q-tab name="lection" label="Lections" />
+        <q-tab name="practical" label="Practical" />
+        <q-tab name="test" label="Tests" />
+        <q-tab name="acw" label="Administrative work"></q-tab>
+      </q-tabs>
+      <q-separator />
+      <q-card-section>
+        <q-card
+          v-for="({ id: assignmentId, title, timestamp, description },
+          index) in filteredClasswork"
+          :key="index"
+        >
+          <q-card-section>
+            <div class="text-h6">{{ title }}</div>
+            <div class="text-subtitle2">
+              {{ timestamp | formatTimestamp }}
+            </div>
+          </q-card-section>
+          <q-separator />
+          <q-card-actions>
+            <q-btn :to="`/assignment/${id}/${assignmentId}`" flat>
+              Open
+            </q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-card-section>
+    </q-card>
+    <q-page-sticky
+      v-if="$store.state.user.auth.uid.startsWith('t')"
+      position="bottom-right"
+      :offset="[15, 15]"
+    >
       <q-fab
-        @click="createTaskModal = true"
+        @click="openCreateTaskModal()"
         label="Create task"
-        label-position="left"
         color="green"
-        icon="mdi-plus"
-        direction="right"
+        hide-icon
       >
       </q-fab>
     </q-page-sticky>
     <q-dialog v-model="createTaskModal">
       <q-card style="width: 700px; max-width: 80vw;">
         <q-card-section>
-          <q-form
-            @submit="onTaskSubmit"
-            @reset="onTaskReset"
-            class="q-gutter-md"
-          >
+          <q-form @submit="onTaskSubmit" class="q-gutter-md">
             <q-input
               v-model="assignment.title"
               label="Task title *"
@@ -73,12 +72,13 @@
               lazy-rules
               filled
             ></q-input>
-            <q-input
-              v-model="assignment.due"
-              :rules="['datetime']"
-              readonly
+            <q-select
+              v-model="assignment.type"
+              :options="assignmentTypes"
+              label="Assingment type"
               filled
-            >
+            />
+            <q-input v-model="assignment.due" label="Due" readonly filled>
               <template v-slot:prepend>
                 <q-icon name="mdi-calendar" class="cursor-pointer">
                   <q-popup-proxy
@@ -89,7 +89,7 @@
                     <q-date
                       v-model="assignment.due"
                       @input="() => $refs.qDateProxy.hide()"
-                      mask="YYYY-MM-DD HH:mm"
+                      :mask="dateFormat"
                     />
                   </q-popup-proxy>
                 </q-icon>
@@ -104,7 +104,7 @@
                     <q-time
                       v-model="assignment.due"
                       @input="() => $refs.qTimeProxy.hide()"
-                      mask="YYYY-MM-DD HH:mm"
+                      :mask="dateFormat"
                       format24h
                     />
                   </q-popup-proxy>
@@ -113,13 +113,6 @@
             </q-input>
             <div>
               <q-btn label="Create" type="submit" color="primary" />
-              <q-btn
-                label="Reset"
-                type="reset"
-                color="primary"
-                flat
-                class="q-ml-sm"
-              />
             </div>
           </q-form>
         </q-card-section>
@@ -129,9 +122,18 @@
 </template>
 
 <script>
+import { date } from "quasar";
 import { firestore, Timestamp } from "boot/firebase";
+import { dateFormat } from "boot/globals";
 
 const courses = firestore.collection("courses");
+
+const assignmentTypes = Object.freeze([
+  { value: "lection", label: "Lection" },
+  { value: "practical", label: "Practical" },
+  { value: "test", label: "Test" },
+  { value: "acw", label: "Administrative work" },
+]);
 
 export default {
   name: "Course",
@@ -141,14 +143,27 @@ export default {
       course: null,
       classwork: null,
       createTaskModal: false,
+      tab: "lection",
       assignment: {
         title: "",
         description: "",
-        due: null,
+        due: "",
+        type: assignmentTypes[0],
       },
+      assignmentTypes,
+      dateFormat,
     };
   },
+  computed: {
+    filteredClasswork() {
+      return this.classwork.filter((item) => item.type === this.tab);
+    },
+  },
   methods: {
+    openCreateTaskModal() {
+      this.assignment.due = date.formatDate(new Date(), this.dateFormat);
+      this.createTaskModal = true;
+    },
     async onTaskSubmit() {
       try {
         await courses
@@ -157,19 +172,16 @@ export default {
           .add({
             title: this.assignment.title,
             description: this.assignment.description,
-            due: Timestamp.fromDate(new Date(this.assignment.due)),
+            due: Timestamp.fromDate(
+              date.extractDate(this.assignment.due, this.dateFormat)
+            ),
             timestamp: Timestamp.now(),
+            type: this.assignment.type.value,
           });
         this.createTaskModal = false;
       } catch (err) {
         window.alert(err);
       }
-    },
-    onTaskReset() {
-      this.assignment.title = "";
-      this.assignment.description = "";
-      this.assignment.date = null;
-      this.assignment.due = null;
     },
   },
   watch: {

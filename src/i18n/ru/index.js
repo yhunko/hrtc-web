@@ -8,6 +8,7 @@ export default {
     auth: "Авторизация",
     home: "Главная",
     profile: "Профиль",
+    bill: "Ведомость",
   },
   settings: {
     lang: "Язык",

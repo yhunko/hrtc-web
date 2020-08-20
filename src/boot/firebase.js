@@ -15,11 +15,21 @@ const FieldValue = firebase.firestore.FieldValue;
 
 export default async ({ store }) => {
   await new Promise((resolve) => {
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(async (user) => {
       if (user) {
-        store.commit("user/set", { user });
+        const userRef = firestore.collection("users").doc(user.uid);
+        await userRef.set(
+          {
+            displayName: user.displayName,
+          },
+          { merge: true }
+        );
+        const dataSnapshot = await userRef.get();
+        store.commit("user/set", { user, data: dataSnapshot.data() });
+        resolve();
+      } else {
+        resolve();
       }
-      resolve();
     });
   });
 };
