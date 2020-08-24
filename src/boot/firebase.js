@@ -12,6 +12,7 @@ const firestore = firebase.firestore();
 const storage = firebase.storage();
 const Timestamp = firebase.firestore.Timestamp;
 const FieldValue = firebase.firestore.FieldValue;
+const FieldPath = firebase.firestore.FieldPath;
 
 export default async ({ store }) => {
   await new Promise((resolve) => {
@@ -34,4 +35,4 @@ export default async ({ store }) => {
   });
 };
 
-export { auth, firestore, storage, Timestamp, FieldValue };
+export { auth, firestore, storage, Timestamp, FieldValue, FieldPath };
