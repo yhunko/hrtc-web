@@ -79,7 +79,7 @@ export default {
           this.auth.password
         );
         this.$store.commit("user/set", { user: auth.currentUser });
-        this.$router.replace("/");
+        window.location.reload();
       } catch (err) {
         this.$q.notify({ message: err.message, color: "red" });
       }

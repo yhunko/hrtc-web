@@ -10,13 +10,13 @@
           aria-label="Menu"
           @click="leftDrawerOpen = !leftDrawerOpen"
         />
-        <q-toolbar-title>
+        <q-toolbar-title v-if="$q.screen.gt.xs">
           {{ $t("header") }}
         </q-toolbar-title>
         <q-space></q-space>
-        <span class="text-subtitle1 q-mr-xs">{{
-          $store.state.user.auth.displayName
-        }}</span>
+        <span class="text-subtitle1 q-mr-xs">
+          {{ $store.state.user.auth.displayName }}
+        </span>
         <q-btn flat round icon="mdi-translate">
           <q-menu auto-close>
             <q-list>
@@ -50,7 +50,7 @@
             {{ $t("drawer.home") }}
           </q-item-section>
         </q-item>
-        <q-item to="/bill" exact>
+        <q-item v-if="isTeacher" to="/bill" exact>
           <q-item-section avatar>
             <q-icon name="mdi-file-document" />
           </q-item-section>
@@ -89,6 +89,7 @@ export default {
   name: "MainLayout",
   data() {
     return {
+      isTeacher: this.$store.state.user.auth.uid.startsWith("t"),
       leftDrawerOpen: false,
       auth: {
         email: "",
@@ -113,7 +114,7 @@ export default {
       try {
         await auth.signOut();
         this.$store.commit("user/logOut");
-        this.$router.replace("/auth");
+        window.location.reload();
       } catch (err) {
         this.$q.notify({ message: err.message, color: "red" });
       }

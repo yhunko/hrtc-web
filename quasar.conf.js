@@ -7,8 +7,6 @@
 // https://quasar.dev/quasar-cli/quasar-conf-js
 /* eslint-env node */
 
-const fs = require("fs");
-
 module.exports = function (/* ctx */) {
   return {
     // https://quasar.dev/quasar-cli/supporting-ts
@@ -72,11 +70,7 @@ module.exports = function (/* ctx */) {
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
     devServer: {
-      https: {
-        // key: fs.readFileSync("/path/to/server.key"),
-        // cert: fs.readFileSync("/path/to/server.crt"),
-        ca: fs.readFileSync("./localhost.pem"),
-      },
+      https: true,
       port: 8080,
       open: true, // opens browser window automatically,
     },

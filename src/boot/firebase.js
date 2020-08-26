@@ -18,14 +18,10 @@ export default async ({ store }) => {
   await new Promise((resolve) => {
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const userRef = firestore.collection("users").doc(user.uid);
-        await userRef.set(
-          {
-            displayName: user.displayName,
-          },
-          { merge: true }
-        );
-        const dataSnapshot = await userRef.get();
+        const dataSnapshot = await firestore
+          .collection("users")
+          .doc(user.uid)
+          .get();
         store.commit("user/set", { user, data: dataSnapshot.data() });
         resolve();
       } else {

@@ -32,9 +32,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 
-# Firebase config
+# Firebase stuff
 src/firebase.config.js
-
-# Added localhost keys for HTTPS
-localhost.pem
-localhost-key.pem
+.firebase

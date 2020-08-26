@@ -7,14 +7,9 @@
         active-color="primary"
         indicator-color="primary"
         align="justify"
-        narrow-indicator
       >
         <q-tab name="assignment" label="Assignment" />
-        <q-tab
-          v-if="$store.state.user.auth.uid.startsWith('t')"
-          name="studentsWork"
-          label="Students work"
-        />
+        <q-tab v-if="isTeacher" name="studentsWork" label="Students work" />
       </q-tabs>
       <q-separator />
       <q-tab-panels v-model="tab" animated>
@@ -25,11 +20,23 @@
                 v-model="splitterWidth"
                 :style="{ width: $q.screen.lt.md ? '90vw' : '70vw' }"
                 :limits="[splitterWidth, splitterWidth]"
+                :horizontal="$q.screen.lt.md"
               >
                 <template v-slot:before>
                   <q-card>
                     <q-card-section>
-                      <div class="text-h6">{{ assignment.title }}</div>
+                      <div v-if="isTeacher" class="flex">
+                        <div class="text-h6">{{ assignment.title }}</div>
+                        <q-space></q-space>
+                        <q-btn
+                          @click="editTaskDialog = true"
+                          color="primary"
+                          icon="mdi-pencil"
+                          flat
+                          round
+                        ></q-btn>
+                      </div>
+                      <div v-else class="text-h6">{{ assignment.title }}</div>
                       <div class="text-subtitle2">
                         {{ assignment.timestamp | formatTimestamp }}
                       </div>
@@ -43,14 +50,7 @@
                     </q-card-section>
                     <q-separator></q-separator>
                     <q-card-section>
-                      <template
-                        v-for="(line, index) in assignment.description.split(
-                          '\n'
-                        )"
-                      >
-                        {{ line }}
-                        <br :key="index" />
-                      </template>
+                      <q-markdown :src="assignment.description"></q-markdown>
                     </q-card-section>
                     <q-separator></q-separator>
                     <q-card-section>
@@ -90,10 +90,7 @@
                     </q-card-section>
                   </q-card>
                 </template>
-                <template
-                  v-if="$store.state.user.auth.uid.startsWith('s')"
-                  v-slot:after
-                >
+                <template v-if="isStudent" v-slot:after>
                   <q-card>
                     <q-card-section class="row flex-center">
                       <div class="text-h6">Your work</div>
@@ -229,7 +226,11 @@
             </div>
           </q-card-section>
           <q-card-section>
-            <q-table title="Work" :data="studentsWork" :columns="columns">
+            <q-table
+              :data="studentsWork"
+              :columns="columns"
+              :grid="$q.screen.lt.md"
+            >
               <template v-slot:body-cell-done="props">
                 <q-td :props="props">
                   <q-badge
@@ -250,6 +251,45 @@
                   flat
                   round
                 ></q-btn>
+              </template>
+              <template v-slot:item="props">
+                <div class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                  <q-card>
+                    <q-card-section>
+                      <q-btn
+                        @click="openWorkDialog(props.row.id)"
+                        icon="mdi-open-in-new"
+                        flat
+                        round
+                      ></q-btn>
+                      <span>Open work</span>
+                    </q-card-section>
+                    <q-separator />
+                    <q-list>
+                      <q-item v-for="col in props.cols" :key="col.name">
+                        <q-item-section>
+                          <q-item-label>{{ col.label }}</q-item-label>
+                        </q-item-section>
+                        <q-item-section side>
+                          <q-item-label v-if="col.name === 'done'" caption>
+                            <q-badge
+                              :color="
+                                isTurnedInLate(props.row.timestamp)
+                                  ? 'negative'
+                                  : 'positive'
+                              "
+                            >
+                              {{ col.value }}
+                            </q-badge>
+                          </q-item-label>
+                          <q-item-label v-else caption>
+                            {{ col.value }}
+                          </q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-card>
+                </div>
               </template>
             </q-table>
           </q-card-section>
@@ -352,13 +392,7 @@
             v-model="workDialog.work.mark"
             @input="changeMark"
             toggle-color="primary"
-            :options="[
-              { label: '1', value: 1 },
-              { label: '2', value: 2 },
-              { label: '3', value: 3 },
-              { label: '4', value: 4 },
-              { label: '5', value: 5 },
-            ]"
+            :options="computedMarks"
             spread
           />
         </q-card-section>
@@ -404,6 +438,14 @@
         </q-card-actions> -->
       </q-card>
     </q-dialog>
+    <TaskDialog
+      v-model="editTaskDialog"
+      mode="edit"
+      :courseId="courseId"
+      :assignmentId="id"
+      :data="assignment"
+      @visibility="changeVisibility"
+    ></TaskDialog>
   </q-page>
 </template>
 
@@ -414,8 +456,13 @@ import isAfter from "date-fns/isAfter";
 import { date } from "quasar";
 import { dateFormat } from "boot/globals";
 
+import TaskDialog from "../components/TaskDialog.vue";
+
 export default {
   name: "Assignment",
+  components: {
+    TaskDialog,
+  },
   data() {
     return {
       id: this.$route.params.assignmentId,
@@ -443,6 +490,7 @@ export default {
           label: "Просмотрено",
           align: "left",
           field: "seen",
+          sortable: true,
           format: (val) => (val ? "Да" : "Нет"),
         },
         {
@@ -450,7 +498,9 @@ export default {
           align: "left",
           label: "Оценка",
           field: "mark",
-          format: (val) => val || "Не выставлена",
+          sortable: true,
+          format: (val) =>
+            val ? `${val} / ${this.assignment.maxMark}` : "Не выставлена",
         },
         {
           name: "submitted",
@@ -465,6 +515,7 @@ export default {
           align: "left",
           label: "Время сдачи",
           field: "timestamp",
+          sortable: true,
           format: (timestamp) =>
             timestamp
               ? date.formatDate(timestamp.toDate(), dateFormat)
@@ -497,6 +548,8 @@ export default {
         uid: this.$store.state.user.auth.uid,
         displayName: this.$store.state.user.auth.displayName,
       },
+      isTeacher: this.$store.state.user.auth.uid.startsWith("t"),
+      isStudent: this.$store.state.user.auth.uid.startsWith("s"),
       loading: {
         fileUpload: false,
       },
@@ -506,6 +559,7 @@ export default {
         work: null,
         files: null,
       },
+      editTaskDialog: false,
     };
   },
   watch: {
@@ -518,7 +572,7 @@ export default {
         await this.$bind("assignment", this.assignmentRef);
         await this.$bind("comments", this.assignmentRef.collection("comments"));
         const doneRef = this.assignmentRef.collection("done");
-        if (this.user.uid.startsWith("s")) {
+        if (this.isStudent) {
           await doneRef.doc(this.user.uid).set(
             {
               seen: true,
@@ -543,6 +597,18 @@ export default {
         // await this.updateTurnInStatus();
         await this.updateFilesList();
       },
+    },
+  },
+  computed: {
+    computedMarks() {
+      const marksArray = [];
+      if (this.assignment.allowZero) {
+        marksArray.push({ label: "0", value: 0 });
+      }
+      for (let i = 1; i <= this.assignment.maxMark; i += 1) {
+        marksArray.push({ label: i.toString(), value: i });
+      }
+      return marksArray;
     },
   },
   methods: {
@@ -681,6 +747,9 @@ export default {
     },
     isTurnedInLate(turnInTimestamp) {
       return isAfter(turnInTimestamp.toDate(), this.assignment.due.toDate());
+    },
+    changeVisibility() {
+      this.editTaskDialog = false;
     },
   },
 };

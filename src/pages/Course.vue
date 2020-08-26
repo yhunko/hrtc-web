@@ -15,7 +15,7 @@
         <q-tab name="acw" label="Administrative work"></q-tab>
       </q-tabs>
       <q-separator />
-      <q-card-section>
+      <q-card-section class="q-gutter-md">
         <q-card
           v-for="({ id: assignmentId, title, timestamp, description },
           index) in filteredClasswork"
@@ -42,14 +42,20 @@
       :offset="[15, 15]"
     >
       <q-fab
-        @click="openCreateTaskModal()"
+        @click="createTaskDialog = true"
         label="Create task"
         color="green"
         hide-icon
       >
       </q-fab>
     </q-page-sticky>
-    <q-dialog v-model="createTaskModal">
+    <TaskDialog
+      v-model="createTaskDialog"
+      :course-id="id"
+      mode="create"
+      @visibility="changeVisibility"
+    ></TaskDialog>
+    <!-- <q-dialog v-model="createTaskModal">
       <q-card style="width: 700px; max-width: 80vw;">
         <q-card-section>
           <q-form @submit="onTaskSubmit" class="q-gutter-md">
@@ -62,6 +68,32 @@
               lazy-rules
               filled
             />
+            <div class="q-pa-xs q-gutter-sm">
+              <q-input
+                v-model="assignment.description"
+                type="textarea"
+                label="Task description *"
+                :rules="[
+                  (val) => (val && val.length > 0) || 'Please type something',
+                ]"
+                lazy-rules
+                filled
+              >
+                <template v-slot:hint>
+                  <div>
+                    Supports
+                    <a href="https://www.markdownguide.org/cheat-sheet/">
+                      Markdown
+                    </a>
+                  </div>
+                </template>
+              </q-input>
+              <q-card flat bordered>
+                <q-card-section>
+                  <q-markdown :src="assignment.description" />
+                </q-card-section>
+              </q-card>
+            </div>
             <q-input
               v-model="assignment.description"
               type="textarea"
@@ -77,6 +109,16 @@
               :options="assignmentTypes"
               label="Assingment type"
               filled
+            />
+            <q-input
+              v-model="assignment.maxMark"
+              label="Max mark"
+              type="number"
+              filled
+            ></q-input>
+            <q-checkbox
+              v-model="assignment.allowZero"
+              label="Allow zero mark"
             />
             <q-input v-model="assignment.due" label="Due" readonly filled>
               <template v-slot:prepend>
@@ -117,14 +159,15 @@
           </q-form>
         </q-card-section>
       </q-card>
-    </q-dialog>
+    </q-dialog> -->
   </q-page>
 </template>
 
 <script>
-import { date } from "quasar";
-import { firestore, Timestamp } from "boot/firebase";
+import { firestore } from "boot/firebase";
 import { dateFormat } from "boot/globals";
+
+import TaskDialog from "../components/TaskDialog.vue";
 
 const courses = firestore.collection("courses");
 
@@ -137,52 +180,27 @@ const assignmentTypes = Object.freeze([
 
 export default {
   name: "Course",
+  components: {
+    TaskDialog,
+  },
   data() {
     return {
       id: this.$route.params.courseId,
       course: null,
       classwork: null,
-      createTaskModal: false,
+      createTaskDialog: false,
       tab: "lection",
       assignment: {
         title: "",
-        description: "",
+        description: null,
         due: "",
         type: assignmentTypes[0],
+        maxMark: 5,
+        allowZero: false,
       },
       assignmentTypes,
       dateFormat,
     };
-  },
-  computed: {
-    filteredClasswork() {
-      return this.classwork.filter((item) => item.type === this.tab);
-    },
-  },
-  methods: {
-    openCreateTaskModal() {
-      this.assignment.due = date.formatDate(new Date(), this.dateFormat);
-      this.createTaskModal = true;
-    },
-    async onTaskSubmit() {
-      try {
-        await courses
-          .doc(this.id)
-          .collection("classwork")
-          .add({
-            title: this.assignment.title,
-            description: this.assignment.description,
-            due: Timestamp.fromDate(
-              date.extractDate(this.assignment.due, this.dateFormat)
-            ),
-            timestamp: Timestamp.now(),
-            type: this.assignment.type.value,
-          });
-        this.createTaskModal = false;
-      } catch (err) {
-        window.alert(err);
-      }
-    },
   },
   watch: {
     "$route.params.courseId": {
@@ -190,9 +208,42 @@ export default {
       handler(id) {
         const course = courses.doc(id);
         this.$bind("course", course);
-        this.$bind("classwork", course.collection("classwork"));
+        this.$bind(
+          "classwork",
+          course.collection("classwork").orderBy("timestamp", "desc")
+        );
       },
     },
+  },
+  computed: {
+    filteredClasswork() {
+      return this.classwork.filter((item) => item.type === this.tab);
+    },
+  },
+  methods: {
+    changeVisibility(value) {
+      this.createTaskDialog = value;
+    },
+    // async onTaskSubmit() {
+    //   try {
+    //     await courses
+    //       .doc(this.id)
+    //       .collection("classwork")
+    //       .add({
+    //         title: this.assignment.title,
+    //         description: this.assignment.description,
+    //         due: Timestamp.fromDate(
+    //           date.extractDate(this.assignment.due, this.dateFormat)
+    //         ),
+    //         timestamp: Timestamp.now(),
+    //         type: this.assignment.type.value,
+    //         maxMark: this.assignment.maxMark,
+    //       });
+    //     this.createTaskModal = false;
+    //   } catch (err) {
+    //     this.$q.notify({ message: err.message, color: "red" });
+    //   }
+    // },
   },
 };
 </script>
