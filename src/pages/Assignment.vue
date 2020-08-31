@@ -2,6 +2,7 @@
   <q-page v-if="assignment" padding>
     <q-card>
       <q-tabs
+        v-if="isTeacher"
         v-model="tab"
         class="text-grey"
         active-color="primary"
@@ -71,7 +72,7 @@
                       <q-list v-if="comments && comments.length">
                         <q-item
                           v-for="({ text, user: { displayName }, timestamp },
-                          index) in comments.slice().reverse()"
+                          index) in comments"
                           :key="index"
                         >
                           <q-item-section>
@@ -96,8 +97,9 @@
                       <div class="text-h6">Your work</div>
                       <q-space></q-space>
                       <template v-if="turnedIn">
-                        <div v-if="turnedIn.mark">
-                          Оценено: {{ turnedIn.mark }}
+                        <div v-if="typeof turnedIn.mark === 'number'">
+                          Оценено: {{ turnedIn.mark }} /
+                          {{ assignment.maxMark }}
                         </div>
                         <div
                           v-else-if="turnedIn.submitted"
@@ -536,7 +538,7 @@ export default {
           align: "left",
         },
       ],
-      splitterWidth: 70,
+      splitterWidth: this.$store.state.user.auth.uid.startsWith("t") ? 100 : 70,
       comment: null,
       filesToUpload: null,
       uploadedFiles: null,
@@ -566,36 +568,46 @@ export default {
     "$route.params.assignmentId": {
       immediate: true,
       async handler(id) {
+        this.$q.loading.show();
         const courseRef = firestore.collection("courses").doc(this.courseId);
         const course = await this.$bind("course", courseRef);
         this.assignmentRef = courseRef.collection("classwork").doc(id);
-        await this.$bind("assignment", this.assignmentRef);
-        await this.$bind("comments", this.assignmentRef.collection("comments"));
         const doneRef = this.assignmentRef.collection("done");
+        const promises = [
+          this.$bind("assignment", this.assignmentRef),
+          this.$bind("comments", this.assignmentRef.collection("comments")),
+        ];
         if (this.isStudent) {
-          await doneRef.doc(this.user.uid).set(
-            {
-              seen: true,
-              user: firestore
-                .collection("users")
-                .doc(this.$store.state.user.auth.uid),
-            },
-            { merge: true }
-          );
-          await this.$bind(
-            "privateComments",
-            this.assignmentRef.collection("privateComments").doc(this.user.uid)
+          promises.push(
+            doneRef.doc(this.user.uid).set(
+              {
+                seen: true,
+                user: firestore
+                  .collection("users")
+                  .doc(this.$store.state.user.auth.uid),
+              },
+              { merge: true }
+            ),
+            this.$bind(
+              "privateComments",
+              this.assignmentRef
+                .collection("privateComments")
+                .doc(this.user.uid)
+            )
           );
         }
-        await this.$bind("studentsWork", doneRef);
-        await this.$bind(
-          "students",
-          firestore.collection("users").where("group", "in", course.groups)
-        );
         this.turnInRef = doneRef.doc(this.user.uid);
-        await this.$bind("turnedIn", this.turnInRef);
-        // await this.updateTurnInStatus();
-        await this.updateFilesList();
+        promises.push(
+          this.$bind("studentsWork", doneRef),
+          this.$bind(
+            "students",
+            firestore.collection("users").where("group", "in", course.groups)
+          ),
+          this.$bind("turnedIn", this.turnInRef),
+          this.updateFilesList()
+        );
+        await Promise.all(promises);
+        this.$q.loading.hide();
       },
     },
   },
@@ -643,13 +655,16 @@ export default {
           await this.assignmentRef
             .collection("privateComments")
             .doc(this.workDialog.uid || this.user.uid)
-            .update({
-              replies: FieldValue.arrayUnion({
-                text: this.privateComment,
-                user: firestore.collection("users").doc(this.user.uid),
-                timestamp: Timestamp.now(),
-              }),
-            });
+            .set(
+              {
+                replies: FieldValue.arrayUnion({
+                  text: this.privateComment,
+                  user: firestore.collection("users").doc(this.user.uid),
+                  timestamp: Timestamp.now(),
+                }),
+              },
+              { merge: true }
+            );
         } catch (err) {
           this.$q.notify({ message: err.message, color: "red" });
         }
@@ -746,7 +761,10 @@ export default {
       return isPast(timestamp.toDate());
     },
     isTurnedInLate(turnInTimestamp) {
-      return isAfter(turnInTimestamp.toDate(), this.assignment.due.toDate());
+      return isAfter(
+        turnInTimestamp ? turnInTimestamp.toDate() : new Date(),
+        this.assignment.due.toDate()
+      );
     },
     changeVisibility() {
       this.editTaskDialog = false;

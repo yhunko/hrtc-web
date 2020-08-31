@@ -55,111 +55,6 @@
       mode="create"
       @visibility="changeVisibility"
     ></TaskDialog>
-    <!-- <q-dialog v-model="createTaskModal">
-      <q-card style="width: 700px; max-width: 80vw;">
-        <q-card-section>
-          <q-form @submit="onTaskSubmit" class="q-gutter-md">
-            <q-input
-              v-model="assignment.title"
-              label="Task title *"
-              :rules="[
-                (val) => (val && val.length > 0) || 'Please type something',
-              ]"
-              lazy-rules
-              filled
-            />
-            <div class="q-pa-xs q-gutter-sm">
-              <q-input
-                v-model="assignment.description"
-                type="textarea"
-                label="Task description *"
-                :rules="[
-                  (val) => (val && val.length > 0) || 'Please type something',
-                ]"
-                lazy-rules
-                filled
-              >
-                <template v-slot:hint>
-                  <div>
-                    Supports
-                    <a href="https://www.markdownguide.org/cheat-sheet/">
-                      Markdown
-                    </a>
-                  </div>
-                </template>
-              </q-input>
-              <q-card flat bordered>
-                <q-card-section>
-                  <q-markdown :src="assignment.description" />
-                </q-card-section>
-              </q-card>
-            </div>
-            <q-input
-              v-model="assignment.description"
-              type="textarea"
-              label="Task description *"
-              :rules="[
-                (val) => (val && val.length > 0) || 'Please type something',
-              ]"
-              lazy-rules
-              filled
-            ></q-input>
-            <q-select
-              v-model="assignment.type"
-              :options="assignmentTypes"
-              label="Assingment type"
-              filled
-            />
-            <q-input
-              v-model="assignment.maxMark"
-              label="Max mark"
-              type="number"
-              filled
-            ></q-input>
-            <q-checkbox
-              v-model="assignment.allowZero"
-              label="Allow zero mark"
-            />
-            <q-input v-model="assignment.due" label="Due" readonly filled>
-              <template v-slot:prepend>
-                <q-icon name="mdi-calendar" class="cursor-pointer">
-                  <q-popup-proxy
-                    ref="qDateProxy"
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      v-model="assignment.due"
-                      @input="() => $refs.qDateProxy.hide()"
-                      :mask="dateFormat"
-                    />
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-              <template v-slot:append>
-                <q-icon name="mdi-clock-outline" class="cursor-pointer">
-                  <q-popup-proxy
-                    ref="qTimeProxy"
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-time
-                      v-model="assignment.due"
-                      @input="() => $refs.qTimeProxy.hide()"
-                      :mask="dateFormat"
-                      format24h
-                    />
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
-            <div>
-              <q-btn label="Create" type="submit" color="primary" />
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog> -->
   </q-page>
 </template>
 
@@ -221,8 +116,9 @@ export default {
     },
   },
   methods: {
-    changeVisibility(value) {
-      this.createTaskDialog = value;
+    changeVisibility(visible, tab) {
+      this.createTaskDialog = visible;
+      this.tab = tab;
     },
     // async onTaskSubmit() {
     //   try {

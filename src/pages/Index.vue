@@ -12,8 +12,10 @@
             bordered
           >
             <q-card-section>
-              <div class="text-h4 text-primary">{{ title }}</div>
-              <div class="text-h6">{{ teacher.displayName }}</div>
+              <q-skeleton v-if="loading" type="text" class="text-h4" />
+              <div v-else class="text-h4 text-primary">{{ title }}</div>
+              <q-skeleton v-if="loading" type="text" class="text-h6" />
+              <div v-else class="text-h6">{{ teacher.displayName }}</div>
             </q-card-section>
             <q-separator inset />
             <q-card-actions>
@@ -35,16 +37,18 @@ export default {
   name: "PageIndex",
   data() {
     return {
+      loading: false,
       courses: [],
       user: {
         uid: this.$store.state.user.auth.uid,
       },
     };
   },
-  created() {
+  async created() {
+    this.loading = true;
     const coursesRef = firestore.collection("courses");
     if (this.user.uid.startsWith("t")) {
-      this.$bind(
+      await this.$bind(
         "courses",
         coursesRef.where(
           "teacher",
@@ -52,8 +56,9 @@ export default {
           firestore.collection("users").doc(this.user.uid)
         )
       );
+      this.loading = false;
     } else if (this.user.uid.startsWith("s")) {
-      this.$bind(
+      await this.$bind(
         "courses",
         coursesRef.where(
           "groups",
@@ -61,6 +66,7 @@ export default {
           this.$store.state.user.data.group
         )
       );
+      this.loading = false;
     }
   },
 };
