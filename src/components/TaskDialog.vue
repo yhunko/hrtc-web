@@ -45,6 +45,66 @@
             label="Assingment type"
             filled
           />
+          <template v-if="selectedType.value === 'test'">
+            <template class="q-px-lg q-py-xs">
+              <div v-for="(option, index) in assignment.test" :key="index">
+                <q-input
+                  v-model="option.question"
+                  type="text"
+                  label="Question"
+                  filled
+                >
+                  <template v-slot:after>
+                    <q-btn
+                      @click="deleteTestQuestion(index)"
+                      dense
+                      flat
+                      round
+                      icon="mdi-delete"
+                    />
+                  </template>
+                </q-input>
+                <div class="q-px-lg q-py-xs">
+                  <q-input
+                    v-for="(answer, answerIndex) in option.answers"
+                    :key="answerIndex"
+                    v-model="option.answers[answerIndex].label"
+                    type="text"
+                  >
+                    <template v-slot:after>
+                      <q-btn
+                        @click="deleteTestAnswer(index, answerIndex)"
+                        icon="mdi-delete"
+                        dense
+                        flat
+                        round
+                      ></q-btn>
+                    </template>
+                    <template v-slot:before>
+                      <q-checkbox
+                        v-model="option.answers[answerIndex].value"
+                        filled
+                      />
+                    </template>
+                  </q-input>
+                  <q-btn
+                    @click="addTestAnswer(index)"
+                    label="Add answer"
+                    class="q-mt-md full-width"
+                    color="primary"
+                  />
+                </div>
+              </div>
+              <div>
+                <q-btn
+                  @click="addTestQuestion()"
+                  label="Add question"
+                  class="q-mt-xs full-width"
+                  color="primary"
+                />
+              </div>
+            </template>
+          </template>
           <q-input
             v-model="assignment.maxMark"
             label="Max mark"
@@ -87,7 +147,7 @@
           </q-input>
           <div>
             <q-btn
-              :label="mode === 'create' ? 'Create' : 'Edit'"
+              :label="mode === 'create' ? 'Create' : 'Update'"
               type="submit"
               color="primary"
             />
@@ -121,6 +181,17 @@ export default {
         description: null,
         due: null,
         type: assignmentTypes[0].value,
+        test: [
+          {
+            question: "",
+            answers: [
+              {
+                label: "",
+                value: false,
+              },
+            ],
+          },
+        ],
         maxMark: 5,
         allowZero: false,
       },
@@ -159,7 +230,6 @@ export default {
   methods: {
     onInput() {
       if (this.data) {
-        console.log(extend(true, this.data));
         this.assignment = extend(true, this.data);
         this.assignment.due = date.formatDate(
           this.assignment.due.toDate(),
@@ -185,17 +255,44 @@ export default {
           type: this.assignment.type,
           maxMark: this.assignment.maxMark,
           allowZero: this.assignment.allowZero,
-          edited: Timestamp.now(),
         };
+        if (this.selectedType.value === "test") {
+          data.test = this.assignment.test;
+        }
         if (this.assignmentId) {
+          data.edited = Timestamp.now();
           await classworkRef.doc(this.assignmentId).set(data, { merge: true });
         } else {
+          data.timestamp = Timestamp.now();
           await classworkRef.add(data);
         }
-        this.$emit("visibility", false);
+        this.$emit("visibility", false, this.selectedType.value);
       } catch (err) {
         this.$q.notify({ message: err.message, color: "red" });
       }
+    },
+    addTestQuestion() {
+      this.assignment.test.push({
+        question: "",
+        answers: [
+          {
+            label: "",
+            value: false,
+          },
+        ],
+      });
+    },
+    deleteTestQuestion(index) {
+      this.assignment.test.splice(index, 1);
+    },
+    addTestAnswer(index) {
+      this.assignment.test[index].answers.push({
+        label: "",
+        value: false,
+      });
+    },
+    deleteTestAnswer(questionIndex, answerIndex) {
+      this.assignment.test[questionIndex].answers.splice(answerIndex, 1);
     },
   },
 };
