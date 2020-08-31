@@ -1,9 +1,9 @@
 import enUS from "./en-us";
 import ru from "./ru";
-import ua from "./ua";
+import uk from "./uk";
 
 export default {
   "en-us": enUS,
   ru,
-  ua,
+  uk,
 };

@@ -83,6 +83,11 @@
 </template>
 
 <script>
+import languages from "quasar/lang/index.json";
+const appLanguages = languages.filter((lang) =>
+  ["ru", "en-us", "uk"].includes(lang.isoName)
+);
+
 import { auth } from "boot/firebase";
 
 export default {
@@ -95,19 +100,27 @@ export default {
         email: "",
         password: "",
       },
-      lang: this.$i18n.locale,
-      langOptions: [
-        { value: "en-us", label: "English" },
-        { value: "ru", label: "Русский" },
-        { value: "ua", label: "Українська" },
-      ],
+      lang: this.$q.lang.isoName,
+      langOptions: [],
     };
   },
   watch: {
     lang(lang) {
-      this.$q.localStorage.set("lang", lang);
-      this.$i18n.locale = lang;
+      import(
+        /* webpackInclude: /(ru|uk|en-us)\.js$/ */
+        "quasar/lang/" + lang
+      ).then(({ default: defaultLang }) => {
+        this.$q.lang.set(defaultLang);
+        this.$q.localStorage.set("lang", lang);
+        this.$i18n.locale = lang;
+      });
     },
+  },
+  created() {
+    this.langOptions = appLanguages.map(({ nativeName, isoName }) => ({
+      label: nativeName,
+      value: isoName,
+    }));
   },
   methods: {
     async logOut() {
