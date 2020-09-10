@@ -127,56 +127,76 @@
                     </q-card-section>
                     <q-separator></q-separator>
                     <q-card-section class="column flex-center">
-                      <q-file
-                        v-if="!turnedIn || !turnedIn.submitted"
-                        v-model="filesToUpload"
-                        :loading="loading.fileUpload"
-                        label="Pick files"
-                        use-chips
-                        filled
-                        multiple
-                        append
-                      >
-                        <template v-slot:after>
-                          <q-btn
-                            @click="upload()"
-                            round
-                            dense
-                            flat
-                            icon="mdi-upload"
-                          />
-                        </template>
-                      </q-file>
-                      <q-list v-if="uploadedFiles" style="width: 100%;" padding>
-                        <q-item
-                          v-for="(file, index) in uploadedFiles"
-                          :key="index"
+                      <template v-if="assignment.type === 'test'">
+                        <q-btn
+                          @click="openTestDialog()"
+                          color="primary"
+                          :label="
+                            isPast(assignment.due)
+                              ? 'Test time is over'
+                              : turnedIn.submitted
+                              ? 'View test answers'
+                              : 'Take the test'
+                          "
+                          :disable="isPast(assignment.due)"
+                        />
+                      </template>
+                      <template v-else>
+                        <q-file
+                          v-if="!turnedIn || !turnedIn.submitted"
+                          v-model="filesToUpload"
+                          :loading="loading.fileUpload"
+                          label="Pick files"
+                          use-chips
+                          filled
+                          multiple
+                          append
                         >
-                          <q-item-section>{{
-                            file.location.path.split("/").pop()
-                          }}</q-item-section>
-                          <q-item-section side>
-                            <div class="text-grey-8 q-gutter-xs">
-                              <q-btn
-                                @click="deleteFile(file)"
-                                class="gt-xs"
-                                size="12px"
-                                flat
-                                dense
-                                round
-                                icon="mdi-delete"
-                              />
-                            </div>
-                          </q-item-section>
-                        </q-item>
-                      </q-list>
-                      <q-btn
-                        v-if="turnedIn && turnedIn.submitted"
-                        @click="unsubmit()"
-                      >
-                        Unsubmit
-                      </q-btn>
-                      <q-btn v-else @click="turnIn()">Turn in</q-btn>
+                          <template v-slot:after>
+                            <q-btn
+                              @click="upload()"
+                              round
+                              dense
+                              flat
+                              icon="mdi-upload"
+                            />
+                          </template>
+                        </q-file>
+                        <q-list
+                          v-if="uploadedFiles"
+                          style="width: 100%;"
+                          padding
+                        >
+                          <q-item
+                            v-for="(file, index) in uploadedFiles"
+                            :key="index"
+                          >
+                            <q-item-section>{{
+                              file.location.path.split("/").pop()
+                            }}</q-item-section>
+                            <q-item-section side>
+                              <div class="text-grey-8 q-gutter-xs">
+                                <q-btn
+                                  @click="deleteFile(file)"
+                                  class="gt-xs"
+                                  size="12px"
+                                  flat
+                                  dense
+                                  round
+                                  icon="mdi-delete"
+                                />
+                              </div>
+                            </q-item-section>
+                          </q-item>
+                        </q-list>
+                        <q-btn
+                          v-if="turnedIn && turnedIn.submitted"
+                          @click="unsubmit()"
+                        >
+                          Unsubmit
+                        </q-btn>
+                        <q-btn v-else @click="turnIn()">Turn in</q-btn>
+                      </template>
                     </q-card-section>
                     <q-separator></q-separator>
                     <q-card-section>
@@ -435,12 +455,10 @@
             </q-item>
           </q-list>
         </q-card-section>
-        <!-- <q-card-actions align="right" class="bg-white text-teal">
-          <q-btn flat label="OK" v-close-popup />
-        </q-card-actions> -->
       </q-card>
     </q-dialog>
     <TaskDialog
+      v-if="isTeacher"
       v-model="editTaskDialog"
       mode="edit"
       :courseId="courseId"
@@ -448,6 +466,79 @@
       :data="assignment"
       @visibility="changeVisibility"
     ></TaskDialog>
+    <q-dialog v-if="isStudent" v-model="testDialog.visible">
+      <q-card>
+        <q-card-section>
+          <div class="text-h5">Тест</div>
+        </q-card-section>
+        <q-card-section>
+          <div class="q-gutter-md">
+            <div v-for="(option, index) in testDialog.test" :key="index">
+              <q-input
+                v-model="option.question"
+                type="text"
+                label="Question"
+                color="negative"
+                filled
+                readonly
+              >
+              </q-input>
+              <div class="q-px-lg q-py-xs q-gutter-y-md">
+                <q-input
+                  v-for="(answer, answerIndex) in option.answers"
+                  :key="answerIndex"
+                  v-model="option.answers[answerIndex].label"
+                  color="negative"
+                  type="text"
+                  filled
+                  readonly
+                >
+                  <template
+                    v-if="
+                      turnedIn.submitted &&
+                      assignment.test[testDialog.variant][index].answers[
+                        answerIndex
+                      ].value
+                    "
+                    v-slot:append
+                  >
+                    <q-icon name="mdi-check" color="positive"></q-icon>
+                  </template>
+                  <template v-slot:before>
+                    <q-checkbox
+                      v-model="option.answers[answerIndex].value"
+                      :disable="turnedIn.submitted"
+                      filled
+                    />
+                  </template>
+                </q-input>
+              </div>
+            </div>
+          </div>
+          <q-btn
+            v-if="turnedIn.submitted"
+            @click="testDialog.visible = false"
+            label="Close"
+            color="primary"
+            class="q-mt-md full-width"
+          />
+          <q-btn
+            v-else
+            @click="turnInTest()"
+            :disable="
+              testDialog.test.some((el, elIndex) =>
+                el.answers.every(
+                  (answerEl, answerIndex) => answerEl.value === false
+                )
+              )
+            "
+            label="Turn in"
+            color="primary"
+            class="q-mt-md full-width"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -562,6 +653,12 @@ export default {
         files: null,
       },
       editTaskDialog: false,
+      testDialog: {
+        visible: false,
+        variant: null,
+        test: [],
+      },
+      testQuestionMark: null,
     };
   },
   watch: {
@@ -720,12 +817,6 @@ export default {
         this.$q.notify({ message: err.message, color: "red" });
       }
     },
-    // async updateTurnInStatus() {
-    //   const turnInDoc = await this.turnInRef.get();
-    //   if (turnInDoc.exists) {
-    //     this.turnedIn = turnInDoc.data();
-    //   }
-    // },
     async unsubmit() {
       try {
         await this.turnInRef.update({
@@ -742,7 +833,7 @@ export default {
         await this.turnInRef.set(
           {
             submitted: true,
-            by: this.user.displayName,
+            user: firestore.collection("users").doc(this.user.uid),
             timestamp: Timestamp.now(),
           },
           { merge: true }
@@ -768,6 +859,65 @@ export default {
     },
     changeVisibility() {
       this.editTaskDialog = false;
+    },
+    openTestDialog() {
+      if (this.turnedIn.submitted === true) {
+        const { test, variant } = JSON.parse(JSON.stringify(this.turnedIn));
+        this.testDialog.test = test;
+        this.testDialog.variant = variant;
+      } else {
+        this.testDialog.variant = this.random(
+          0,
+          Object.keys(this.assignment.test).length - 1
+        );
+        const test = JSON.parse(JSON.stringify(this.assignment.test))[
+          this.testDialog.variant
+        ];
+        for (const { answers } of test) {
+          for (const answer of answers) {
+            answer.value = false;
+          }
+        }
+        this.testDialog.test = test;
+      }
+      this.testQuestionMark =
+        this.assignment.maxMark / this.testDialog.test.length;
+      this.testDialog.visible = true;
+    },
+    random(from, to) {
+      const min = Math.ceil(from);
+      const max = Math.floor(to);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+    async turnInTest() {
+      try {
+        let testMark = 0;
+        this.assignment.test[this.testDialog.variant].forEach(
+          (value, index) => {
+            if (
+              value.answers.every(
+                ({ value }, elIndex) =>
+                  this.testDialog.test[index].answers[elIndex].value === value
+              )
+            ) {
+              testMark += this.testQuestionMark;
+            }
+          }
+        );
+        await this.turnInRef.set(
+          {
+            submitted: true,
+            user: firestore.collection("users").doc(this.user.uid),
+            timestamp: Timestamp.now(),
+            test: this.testDialog.test,
+            mark: Math.round(testMark.toFixed(1)),
+            variant: this.testDialog.variant,
+          },
+          { merge: true }
+        );
+      } catch (err) {
+        this.$q.notify({ message: err.message, color: "red" });
+      }
     },
   },
 };

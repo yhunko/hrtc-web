@@ -3,21 +3,17 @@
     <q-header v-if="$store.state.user.auth" elevated>
       <q-toolbar>
         <q-btn
+          @click="leftDrawerOpen = !leftDrawerOpen"
+          icon="mdi-menu"
           flat
           dense
           round
-          icon="mdi-menu"
-          aria-label="Menu"
-          @click="leftDrawerOpen = !leftDrawerOpen"
         />
         <q-toolbar-title v-if="$q.screen.gt.xs">
           {{ $t("header") }}
         </q-toolbar-title>
         <q-space></q-space>
-        <span class="text-subtitle1 q-mr-xs">
-          {{ $store.state.user.auth.displayName }}
-        </span>
-        <q-btn flat round icon="mdi-translate">
+        <q-btn icon="mdi-translate" round flat>
           <q-menu auto-close>
             <q-list>
               <q-item
@@ -32,16 +28,16 @@
             </q-list>
           </q-menu>
         </q-btn>
-        <q-btn @click="logOut()" flat round icon="mdi-logout"></q-btn>
+        <q-btn @click="logOut()" icon="mdi-logout" flat round />
       </q-toolbar>
     </q-header>
     <q-drawer
       v-model="leftDrawerOpen"
       show-if-above
-      bordered
+      elevated
       content-class="bg-grey-1"
     >
-      <q-list>
+      <q-list style="height: calc(100% - 150px); margin-top: 150px;" padding>
         <q-item to="/" exact>
           <q-item-section avatar>
             <q-icon name="mdi-home" />
@@ -58,23 +54,26 @@
             {{ $t("drawer.bill") }}
           </q-item-section>
         </q-item>
-        <!-- <q-item to="/profile" exact>
+        <q-separator spaced />
+        <q-item @click="openGitHub()" clickable v-ripple>
           <q-item-section avatar>
-            <q-icon name="mdi-account" />
+            <q-icon name="mdi-github" />
           </q-item-section>
-          <q-item-section>
-            {{ $t("drawer.profile") }}
-          </q-item-section>
-        </q-item> -->
-        <!-- <q-item to="/settings" exact>
-          <q-item-section avatar>
-            <q-icon name="mdi-cog" />
-          </q-item-section>
-          <q-item-section>
-            {{ $t("drawer.settings") }}
-          </q-item-section>
-        </q-item> -->
+          <q-item-section>Code on GitHub</q-item-section>
+        </q-item>
       </q-list>
+      <q-img
+        class="absolute-top dimmed"
+        src="https://cdn.quasar.dev/img/material.png"
+        style="height: 150px;"
+      >
+        <div class="absolute-bottom bg-transparent z-top">
+          <div class="text-weight-bold">
+            {{ $store.state.user.auth.displayName }}
+          </div>
+          <div>{{ $store.state.user.auth.email }}</div>
+        </div>
+      </q-img>
     </q-drawer>
     <q-page-container>
       <router-view />
@@ -131,6 +130,9 @@ export default {
       } catch (err) {
         this.$q.notify({ message: err.message, color: "red" });
       }
+    },
+    openGitHub() {
+      window.open("https://github.com/yegorgunko/hrtc-web", "_blank");
     },
   },
 };

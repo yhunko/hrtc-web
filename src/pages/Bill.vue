@@ -4,24 +4,42 @@
       <q-expansion-item
         v-for="({ id, title, groups }, index) in subjects"
         :key="index"
-        popup
         :label="title"
+        popup
       >
         <q-separator />
         <q-card>
           <q-card-section>
             <q-list>
-              <q-item v-for="(group, index) in groups" :key="index">
-                <q-item-section>{{ group }}</q-item-section>
-                <q-item-section side>
-                  <q-btn
-                    @click="createBill(id, group)"
-                    color="primary"
-                    label="Составить ведомость"
-                    flat
-                  ></q-btn>
-                </q-item-section>
-              </q-item>
+              <q-expansion-item
+                v-for="(group, groupIndex) in groups"
+                :key="groupIndex"
+                @before-show="revealGroup(id, index)"
+                :label="group"
+                caption="Choose tasks to export"
+                :group="`${groupTasks}-${groupIndex}`"
+              >
+                <q-card>
+                  <q-card-section class="flex flex-center">
+                    <q-option-group
+                      v-if="groupTasks.length"
+                      v-model="groupTasksChosen"
+                      :options="groupTasks"
+                      color="primary"
+                      type="checkbox"
+                    />
+                    <div v-else class="text-h5">No tasks for this group</div>
+                  </q-card-section>
+                  <q-card-section v-if="groupTasks.length">
+                    <q-btn
+                      @click="createBill(id, group)"
+                      label="Download bill"
+                      color="primary"
+                      class="full-width"
+                    ></q-btn>
+                  </q-card-section>
+                </q-card>
+              </q-expansion-item>
             </q-list>
           </q-card-section>
         </q-card>
@@ -38,7 +56,12 @@ export default {
   name: "Bill",
   data() {
     return {
+      groupExpanded: false,
+      currentSubject: null,
+      groupTasksChosen: [],
+      groupTasks: [],
       subjects: [],
+      classwork: [],
     };
   },
   async created() {
@@ -54,6 +77,24 @@ export default {
     );
   },
   methods: {
+    async revealGroup(id, subjectIndex) {
+      if (this.currentSubject !== subjectIndex) {
+        this.currentSubject = subjectIndex;
+        this.groupTasks = [];
+        const classworkSnapshot = await firestore
+          .collection("courses")
+          .doc(id)
+          .collection("classwork")
+          .get();
+        classworkSnapshot.forEach((doc) => {
+          const task = doc.data();
+          this.groupTasks.push({
+            label: task.title,
+            value: doc.id,
+          });
+        });
+      }
+    },
     async createBill(subjectId, group) {
       const cols = ["Студент"];
       const rows = [];
@@ -61,7 +102,9 @@ export default {
         .collection("courses")
         .doc(subjectId)
         .collection("classwork")
+        .where(FieldPath.documentId(), "in", this.groupTasksChosen)
         .get();
+      console.log(classworkSnapshot);
       await new Promise((resolve) => {
         classworkSnapshot.forEach(async (doc) => {
           cols.push(`${doc.data().title}`);

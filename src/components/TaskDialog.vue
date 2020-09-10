@@ -1,6 +1,6 @@
 <template>
   <q-dialog :value="value" @input="$emit('input')">
-    <q-card style="width: 700px; max-width: 80vw;">
+    <q-card style="min-width: 700px; max-width: 90vw;">
       <q-card-section>
         <q-form @submit="onTaskSubmit" class="q-gutter-md">
           <q-input
@@ -42,69 +42,127 @@
           <q-select
             v-model="selectedType"
             :options="assignmentTypes"
-            label="Assingment type"
+            label="Assignment type"
             filled
           />
           <template v-if="selectedType.value === 'test'">
-            <template class="q-px-lg q-py-xs">
-              <div v-for="(option, index) in assignment.test" :key="index">
-                <q-input
-                  v-model="option.question"
-                  type="text"
-                  label="Question"
-                  filled
-                >
-                  <template v-slot:after>
-                    <q-btn
-                      @click="deleteTestQuestion(index)"
-                      dense
-                      flat
-                      round
-                      icon="mdi-delete"
-                    />
-                  </template>
-                </q-input>
-                <div class="q-px-lg q-py-xs">
-                  <q-input
-                    v-for="(answer, answerIndex) in option.answers"
-                    :key="answerIndex"
-                    v-model="option.answers[answerIndex].label"
-                    type="text"
-                  >
-                    <template v-slot:after>
-                      <q-btn
-                        @click="deleteTestAnswer(index, answerIndex)"
-                        icon="mdi-delete"
-                        dense
-                        flat
-                        round
-                      ></q-btn>
-                    </template>
-                    <template v-slot:before>
-                      <q-checkbox
-                        v-model="option.answers[answerIndex].value"
-                        filled
-                      />
-                    </template>
-                  </q-input>
-                  <q-btn
-                    @click="addTestAnswer(index)"
-                    label="Add answer"
-                    class="q-mt-md full-width"
-                    color="primary"
-                  />
-                </div>
-              </div>
-              <div>
+            <div class="q-px-lg q-py-xs q-gutter-sm">
+              <div class="row q-gutter-md">
                 <q-btn
-                  @click="addTestQuestion()"
-                  label="Add question"
-                  class="q-mt-xs full-width"
+                  @click="addTestVariant()"
                   color="primary"
+                  label="Add variant"
+                  class="col"
+                  style="width: 100%;"
+                />
+                <q-btn
+                  @click="deleteTestVariant()"
+                  :label="
+                    testVariantTab < 0
+                      ? 'No variant to delete'
+                      : `Delete variant ${testVariantTab + 1}`
+                  "
+                  :disable="testVariantTab < 0"
+                  color="negative"
+                  class="col"
+                  style="width: 100%;"
                 />
               </div>
-            </template>
+              <q-tabs
+                v-model="testVariantTab"
+                class="text-grey"
+                active-color="primary"
+                indicator-color="primary"
+                otuside-arrows
+              >
+                <q-tab
+                  v-for="(variant, variantIndex) in assignment.test"
+                  :key="variantIndex"
+                  :name="variantIndex"
+                  :label="`Variant ${variantIndex + 1}`"
+                ></q-tab>
+              </q-tabs>
+              <q-separator />
+              <q-tab-panels v-model="testVariantTab" animated>
+                <q-tab-panel
+                  v-for="(variant, variantIndex) in assignment.test"
+                  :key="variantIndex"
+                  :name="variantIndex"
+                >
+                  <div v-for="(option, index) in variant" :key="index">
+                    <q-input
+                      v-model="option.question"
+                      :label="`Input question ${index + 1}`"
+                      type="text"
+                      filled
+                    >
+                      <template v-slot:after>
+                        <q-btn
+                          @click="deleteTestQuestion(variantIndex, index)"
+                          dense
+                          flat
+                          round
+                          icon="mdi-delete"
+                        />
+                      </template>
+                    </q-input>
+                    <div class="q-px-lg q-py-xs">
+                      <q-input
+                        v-for="(answer, answerIndex) in option.answers"
+                        :key="answerIndex"
+                        v-model="option.answers[answerIndex].label"
+                        :label="`Input answer ${answerIndex + 1}`"
+                        type="text"
+                      >
+                        <template v-slot:after>
+                          <q-btn
+                            @click="
+                              deleteTestAnswer(variantIndex, index, answerIndex)
+                            "
+                            icon="mdi-delete"
+                            dense
+                            flat
+                            round
+                          ></q-btn>
+                        </template>
+                        <template v-slot:before>
+                          <q-checkbox
+                            v-model="option.answers[answerIndex].value"
+                            filled
+                          />
+                        </template>
+                      </q-input>
+                      <q-btn
+                        @click="addTestAnswer(variantIndex, index)"
+                        label="Add answer"
+                        class="q-mt-md full-width"
+                        color="primary"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <q-btn
+                      @click="addTestQuestion(variantIndex)"
+                      label="Add question"
+                      class="q-mt-xs full-width"
+                      color="primary"
+                    />
+                  </div>
+                </q-tab-panel>
+              </q-tab-panels>
+            </div>
           </template>
+          <q-checkbox
+            v-model="assignment.conferenceEnabled"
+            label="Add conference link?"
+          />
+          <q-input
+            v-if="assignment.conferenceEnabled"
+            v-model="assignment.conferenceURL"
+            type="url"
+            label="Conference link"
+            filled
+          />
           <q-input
             v-model="assignment.maxMark"
             label="Max mark"
@@ -176,21 +234,26 @@ export default {
   props: ["value", "mode", "courseId", "assignmentId", "data"],
   data() {
     return {
+      testVariantTab: 0,
       assignment: {
         title: "",
         description: null,
         due: null,
         type: assignmentTypes[0].value,
+        conferenceEnabled: false,
+        conferenceURL: "",
         test: [
-          {
-            question: "",
-            answers: [
-              {
-                label: "",
-                value: false,
-              },
-            ],
-          },
+          [
+            {
+              question: "",
+              answers: [
+                {
+                  label: "",
+                  value: false,
+                },
+              ],
+            },
+          ],
         ],
         maxMark: 5,
         allowZero: false,
@@ -213,10 +276,13 @@ export default {
   },
   watch: {
     value: {
-      immediate: true,
+      immediate: false,
       handler() {
         if (this.data) {
           this.assignment = extend(true, this.assignment, this.data);
+          if (this.assignment.test) {
+            this.assignment.test = Object.values(this.assignment.test);
+          }
           this.assignment.due = date.formatDate(
             this.assignment.due.toDate(),
             dateFormat
@@ -228,18 +294,6 @@ export default {
     },
   },
   methods: {
-    onInput() {
-      if (this.data) {
-        this.assignment = extend(true, this.data);
-        this.assignment.due = date.formatDate(
-          this.assignment.due.toDate(),
-          dateFormat
-        );
-      } else {
-        this.assignment.due = date.formatDate(new Date(), dateFormat);
-      }
-      this.$emit("input");
-    },
     async onTaskSubmit() {
       try {
         const classworkRef = firestore
@@ -253,11 +307,19 @@ export default {
             date.extractDate(this.assignment.due, dateFormat)
           ),
           type: this.assignment.type,
+          conferenceEnabled: this.assignment.conferenceEnabled,
           maxMark: this.assignment.maxMark,
           allowZero: this.assignment.allowZero,
         };
         if (this.selectedType.value === "test") {
-          data.test = this.assignment.test;
+          const res = {};
+          this.assignment.test.forEach((variant, index) => {
+            res[index] = variant;
+          });
+          data.test = res;
+        }
+        if (this.assignment.conferenceEnabled) {
+          data.conferenceURL = this.assignment.conferenceURL;
         }
         if (this.assignmentId) {
           data.edited = Timestamp.now();
@@ -271,8 +333,8 @@ export default {
         this.$q.notify({ message: err.message, color: "red" });
       }
     },
-    addTestQuestion() {
-      this.assignment.test.push({
+    addTestQuestion(variantIndex) {
+      this.assignment.test[variantIndex].push({
         question: "",
         answers: [
           {
@@ -282,17 +344,38 @@ export default {
         ],
       });
     },
-    deleteTestQuestion(index) {
-      this.assignment.test.splice(index, 1);
+    deleteTestQuestion(variantIndex, index) {
+      this.assignment.test[variantIndex].splice(index, 1);
     },
-    addTestAnswer(index) {
-      this.assignment.test[index].answers.push({
+    addTestAnswer(variantIndex, index) {
+      this.assignment.test[variantIndex][index].answers.push({
         label: "",
         value: false,
       });
     },
-    deleteTestAnswer(questionIndex, answerIndex) {
-      this.assignment.test[questionIndex].answers.splice(answerIndex, 1);
+    deleteTestAnswer(variantIndex, questionIndex, answerIndex) {
+      this.assignment.test[variantIndex][questionIndex].answers.splice(
+        answerIndex,
+        1
+      );
+    },
+    addTestVariant() {
+      this.assignment.test.push([
+        {
+          question: "",
+          answers: [
+            {
+              label: "",
+              value: false,
+            },
+          ],
+        },
+      ]);
+      this.testVariantTab = this.assignment.test.length - 1;
+    },
+    deleteTestVariant() {
+      this.assignment.test.splice(this.testVariantTab, 1);
+      this.testVariantTab = this.testVariantTab - 1;
     },
   },
 };
