@@ -9,8 +9,11 @@
         indicator-color="primary"
         align="justify"
       >
-        <q-tab name="assignment" label="Assignment" />
-        <q-tab v-if="isTeacher" name="studentsWork" label="Students work" />
+        <q-tab :label="$t('assignment.tabs.assignment')" name="assignment" />
+        <q-tab
+          :label="$t('assignemnt.tabs.studentsWork')"
+          name="studentsWork"
+        />
       </q-tabs>
       <q-separator />
       <q-tab-panels v-model="tab" animated>
@@ -27,7 +30,7 @@
                   <q-card>
                     <q-card-section>
                       <div v-if="isTeacher" class="flex">
-                        <div class="text-h6">{{ assignment.title }}</div>
+                        <div class="text-h3">{{ assignment.title }}</div>
                         <q-space></q-space>
                         <q-btn
                           @click="editTaskDialog = true"
@@ -35,9 +38,9 @@
                           icon="mdi-pencil"
                           flat
                           round
-                        ></q-btn>
+                        />
                       </div>
-                      <div v-else class="text-h6">{{ assignment.title }}</div>
+                      <div v-else class="text-h3">{{ assignment.title }}</div>
                       <div class="text-subtitle2">
                         {{ assignment.timestamp | formatTimestamp }}
                       </div>
@@ -45,19 +48,45 @@
                         <span>{{ course.teacher.displayName }}</span>
                         <q-space></q-space>
                         <span :class="{ 'text-red': isPast(assignment.due) }">
-                          Due {{ assignment.due | formatDueTimestamp }}
+                          {{ $t("assignment.due") }}
+                          {{ assignment.due | formatDueTimestamp }}
                         </span>
                       </div>
                     </q-card-section>
                     <q-separator></q-separator>
                     <q-card-section>
+                      <div class="text-h6">
+                        {{ $t("assignment.description") }}
+                      </div>
                       <q-markdown :src="assignment.description"></q-markdown>
                     </q-card-section>
+                    <template
+                      v-if="
+                        assignmentUploadedFiles &&
+                        assignmentUploadedFiles.length
+                      "
+                    >
+                      <q-separator></q-separator>
+                      <q-card-section>
+                        <div class="text-h6">
+                          {{ $t("assignment.pinnedFiles") }}
+                        </div>
+                        <q-chip
+                          v-for="(file, index) in assignmentUploadedFiles"
+                          :key="index"
+                          @click="downloadFile(file)"
+                          icon="mdi-download"
+                          clickable
+                        >
+                          {{ file.location.path.split("/").pop() }}
+                        </q-chip>
+                      </q-card-section>
+                    </template>
                     <q-separator></q-separator>
                     <q-card-section>
                       <q-input
                         v-model="comment"
-                        label="Comment"
+                        :label="$t('assignment.comment')"
                         filled
                         autogrow
                       >
@@ -94,11 +123,14 @@
                 <template v-if="isStudent" v-slot:after>
                   <q-card>
                     <q-card-section class="row flex-center">
-                      <div class="text-h6">Your work</div>
+                      <div class="text-h6">
+                        {{ $t("assignment.student.yourWork") }}
+                      </div>
                       <q-space></q-space>
                       <template v-if="turnedIn">
                         <div v-if="typeof turnedIn.mark === 'number'">
-                          Оценено: {{ turnedIn.mark }} /
+                          {{ $t("assignment.student.gradeSet") }}:
+                          {{ turnedIn.mark }} /
                           {{ assignment.maxMark }}
                         </div>
                         <div
@@ -110,8 +142,8 @@
                         >
                           {{
                             isPast(turnedIn.timestamp)
-                              ? "Turned in late"
-                              : "Turned in"
+                              ? $t("assignment.student.turnedInLate")
+                              : $t("assignment.student.turnedIn")
                           }}
                         </div>
                       </template>
@@ -122,7 +154,11 @@
                           'text-subtitle2',
                         ]"
                       >
-                        {{ isPast(assignment.due) ? "Missing" : "Assigned" }}
+                        {{
+                          isPast(assignment.due)
+                            ? $t("assignment.student.missing")
+                            : $t("assignment.student.assigned")
+                        }}
                       </div>
                     </q-card-section>
                     <q-separator></q-separator>
@@ -133,10 +169,10 @@
                           color="primary"
                           :label="
                             isPast(assignment.due)
-                              ? 'Test time is over'
+                              ? $t('assignment.student.test.timeIsOver')
                               : turnedIn.submitted
-                              ? 'View test answers'
-                              : 'Take the test'
+                              ? $t('assignment.student.test.viewTest')
+                              : $t('assignment.student.test.takeTest')
                           "
                           :disable="isPast(assignment.due)"
                         />
@@ -146,7 +182,7 @@
                           v-if="!turnedIn || !turnedIn.submitted"
                           v-model="filesToUpload"
                           :loading="loading.fileUpload"
-                          label="Pick files"
+                          :label="$t('assignment.student.pickFiles')"
                           use-chips
                           filled
                           multiple
@@ -193,9 +229,11 @@
                           v-if="turnedIn && turnedIn.submitted"
                           @click="unsubmit()"
                         >
-                          Unsubmit
+                          {{ $t("assignment.student.unsubmit") }}
                         </q-btn>
-                        <q-btn v-else @click="turnIn()">Turn in</q-btn>
+                        <q-btn v-else @click="turnIn()">{{
+                          $t("assignment.student.turnIn")
+                        }}</q-btn>
                       </template>
                     </q-card-section>
                     <q-separator></q-separator>
@@ -203,7 +241,7 @@
                       <q-input
                         v-model="privateComment"
                         type="text"
-                        label="Private comment"
+                        :label="$t('assignment.privateComment')"
                       >
                         <template v-slot:append>
                           <q-icon
@@ -244,7 +282,8 @@
           <q-card-section>
             <div class="text-h5">{{ assignment.title }}</div>
             <div class="subtitle">
-              Сдать до {{ assignment.due | formatDueTimestamp }}
+              {{ $t("assignment.due") }}
+              {{ assignment.due | formatDueTimestamp }}
             </div>
           </q-card-section>
           <q-card-section>
@@ -284,7 +323,7 @@
                         flat
                         round
                       ></q-btn>
-                      <span>Open work</span>
+                      <span>{{ $t("assignment.teacher.openWork") }}</span>
                     </q-card-section>
                     <q-separator />
                     <q-list>
@@ -321,14 +360,18 @@
     <q-dialog v-model="workDialog.visible">
       <q-card style="width: 700px; max-width: 80vw;">
         <q-card-section>
-          <div class="text-h5">Работа студента</div>
+          <div class="text-h5">{{ $t("assignment.teacher.studentsWork") }}</div>
         </q-card-section>
         <q-card-section class="q-pt-none">
           <q-list bordered>
-            <q-item-label header>Статус</q-item-label>
+            <q-item-label header>{{
+              $t("assignment.teacher.status")
+            }}</q-item-label>
             <template v-if="workDialog.work">
               <q-item>
-                <q-item-section>Просмотрено</q-item-section>
+                <q-item-section>{{
+                  $t("assignment.teacher.seen")
+                }}</q-item-section>
                 <q-item-section avatar>
                   <q-avatar
                     :color="workDialog.work.seen ? 'positive' : 'negative'"
@@ -338,7 +381,9 @@
                 </q-item-section>
               </q-item>
               <q-item>
-                <q-item-section>Сдано</q-item-section>
+                <q-item-section>{{
+                  $t("assignment.teacher.turnedIn")
+                }}</q-item-section>
                 <q-item-section avatar>
                   <q-avatar
                     :color="workDialog.work.submitted ? 'positive' : 'negative'"
@@ -351,7 +396,9 @@
               </q-item>
               <template v-if="workDialog.work.submitted">
                 <q-item>
-                  <q-item-section>Сдано вовремя</q-item-section>
+                  <q-item-section>{{
+                    $t("assignment.teacher.turnedInOnTime")
+                  }}</q-item-section>
                   <q-item-section avatar>
                     <q-avatar
                       v-if="isTurnedInLate(workDialog.work.timestamp)"
@@ -368,7 +415,9 @@
                   </q-item-section>
                 </q-item>
                 <q-item>
-                  <q-item-section>Редактировано</q-item-section>
+                  <q-item-section>{{
+                    $t("assignment.teacher.edited")
+                  }}</q-item-section>
                   <q-item-section avatar>
                     <q-avatar
                       v-if="workDialog.work.edited"
@@ -386,7 +435,7 @@
                 </q-item>
               </template>
             </template>
-            <q-item-label header>Файлы</q-item-label>
+            <q-item-label header>{{ $t("files") }}</q-item-label>
             <template v-if="workDialog.files && workDialog.files.length">
               <q-item v-for="(file, index) in workDialog.files" :key="index">
                 <q-item-section>
@@ -403,18 +452,18 @@
               </q-item>
             </template>
             <q-item v-else>
-              <q-item-section>Файлы отсутствуют</q-item-section>
+              <q-item-section>{{ $t("filesMissing") }}</q-item-section>
             </q-item>
           </q-list>
         </q-card-section>
         <q-separator></q-separator>
         <q-card-section v-if="workDialog.work">
-          <div class="text-h6 q-mb-md">Оценка</div>
+          <div class="text-h6 q-mb-md">{{ $t("mark") }}</div>
           <q-btn-toggle
             v-model="workDialog.work.mark"
             @input="changeMark"
-            toggle-color="primary"
             :options="computedMarks"
+            toggle-color="primary"
             spread
           />
         </q-card-section>
@@ -422,8 +471,8 @@
         <q-card-section>
           <q-input
             v-model="privateComment"
+            :label="$t('assignment.privateComment')"
             type="text"
-            label="Comment"
             filled
             autogrow
           >
@@ -464,12 +513,13 @@
       :courseId="courseId"
       :assignmentId="id"
       :data="assignment"
+      :uploadedFiles="assignmentUploadedFiles"
       @visibility="changeVisibility"
     ></TaskDialog>
     <q-dialog v-if="isStudent" v-model="testDialog.visible">
       <q-card>
         <q-card-section>
-          <div class="text-h5">Тест</div>
+          <div class="text-h5">{{ $t("assignment.test.label") }}</div>
         </q-card-section>
         <q-card-section>
           <div class="q-gutter-md">
@@ -477,7 +527,7 @@
               <q-input
                 v-model="option.question"
                 type="text"
-                label="Question"
+                :label="$t('assignment.test.question.label')"
                 color="negative"
                 filled
                 readonly
@@ -546,7 +596,7 @@
 import { firestore, storage, Timestamp, FieldValue } from "boot/firebase";
 import isPast from "date-fns/isPast";
 import isAfter from "date-fns/isAfter";
-import { date } from "quasar";
+import { date, openURL } from "quasar";
 import { dateFormat } from "boot/globals";
 
 import TaskDialog from "../components/TaskDialog.vue";
@@ -569,6 +619,7 @@ export default {
       assignment: null,
       comments: null,
       privateComments: null,
+      assignmentUploadedFiles: null,
       columns: [
         {
           name: "student",
@@ -704,6 +755,11 @@ export default {
           this.updateFilesList()
         );
         await Promise.all(promises);
+        const uploadedFiles = await storage
+          .ref()
+          .child(`files/${this.courseId}/${this.id}`)
+          .listAll();
+        this.assignmentUploadedFiles = uploadedFiles.items;
         this.$q.loading.hide();
       },
     },
@@ -846,7 +902,7 @@ export default {
       const downloadURL = await storage
         .ref(file.location.path)
         .getDownloadURL();
-      window.open(downloadURL, "_blank");
+      openURL(downloadURL);
     },
     isPast(timestamp) {
       return isPast(timestamp.toDate());

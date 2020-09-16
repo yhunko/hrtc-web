@@ -18,39 +18,31 @@
           @submit="logIn"
         >
           <q-input
-            filled
-            type="email"
             v-model="auth.email"
-            :label="`${$t('auth.form.email.label')} *`"
-            lazy-rules
+            :label="`${$t('auth.email.label')} *`"
             :rules="[
-              (val) =>
-                (val !== null && val !== '') ||
-                $t('auth.form.email.errors.empty'),
+              (val) => (val !== null && val !== '') || $t('errors.empty'),
               (val) =>
                 /[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/gm.test(val) ||
-                $t('auth.form.email.errors.wrong'),
+                $t('auth.email.wrong'),
             ]"
+            type="email"
+            filled
+            lazy-rules
           />
           <q-input
-            filled
-            type="password"
             v-model="auth.password"
-            :label="`${$t('auth.form.password.label')} *`"
-            lazy-rules
+            :label="`${$t('auth.password')} *`"
             :rules="[
-              (val) =>
-                (val !== null && val !== '') ||
-                $t('auth.form.password.errors.empty'),
+              (val) => (val !== null && val !== '') || $t('errors.empty'),
             ]"
+            type="password"
+            filled
+            lazy-rules
           />
           <div class="flex">
             <q-space></q-space>
-            <q-btn
-              :label="$t('auth.form.login')"
-              type="submit"
-              color="primary"
-            />
+            <q-btn :label="$t('auth.login')" type="submit" color="primary" />
           </div>
         </q-form>
       </q-page>

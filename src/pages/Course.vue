@@ -9,10 +9,12 @@
         align="justify"
         narrow-indicator
       >
-        <q-tab name="lection" label="Lections" />
-        <q-tab name="practical" label="Practical" />
-        <q-tab name="test" label="Tests" />
-        <q-tab name="acw" label="Administrative work"></q-tab>
+        <q-tab
+          v-for="({ value, label }, index) in assignmentTypes"
+          :key="index"
+          :name="value"
+          :label="$t(`course.tabs.${label}`)"
+        />
       </q-tabs>
       <q-separator />
       <q-card-section class="q-gutter-md">
@@ -29,9 +31,11 @@
           </q-card-section>
           <q-separator />
           <q-card-actions>
-            <q-btn :to="`/assignment/${id}/${assignmentId}`" flat>
-              Open
-            </q-btn>
+            <q-btn
+              :label="$t('course.assignment.open')"
+              :to="`/assignment/${id}/${assignmentId}`"
+              flat
+            />
           </q-card-actions>
         </q-card>
       </q-card-section>

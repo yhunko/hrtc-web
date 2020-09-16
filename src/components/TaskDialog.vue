@@ -39,6 +39,37 @@
               </q-card-section>
             </q-card>
           </div>
+          <div class="q-pa-xs">
+            <q-file
+              v-model="assignmentFiles"
+              label="Add files"
+              filled
+              use-chips
+              multiple
+              counter
+            />
+          </div>
+          <q-list v-if="uploadedFiles && uploadedFiles.length" bordered padding>
+            <q-item-label header>Uploaded files</q-item-label>
+            <q-item v-for="(file, index) in uploadedFiles" :key="index">
+              <q-item-section>
+                {{ file.location.path.split("/").pop() }}
+              </q-item-section>
+              <q-item-section side>
+                <div class="text-grey-8 q-gutter-xs">
+                  <q-btn
+                    @click="deleteUploadedFile(file, index)"
+                    class="gt-xs"
+                    size="12px"
+                    flat
+                    dense
+                    round
+                    icon="mdi-delete"
+                  />
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
           <q-select
             v-model="selectedType"
             :options="assignmentTypes"
@@ -90,6 +121,31 @@
                   :name="variantIndex"
                 >
                   <div v-for="(option, index) in variant" :key="index">
+                    <div class="q-mb-md">
+                      <q-img v-if="option.image" :src="option.image">
+                        <div class="absolute-top-right">
+                          <q-btn
+                            @click="option.image = null"
+                            icon="mdi-close"
+                            dense
+                            round
+                            flat
+                          />
+                        </div>
+                      </q-img>
+                      <q-file
+                        v-else
+                        @input="onTestImageInput($event, variantIndex, index)"
+                        :label="`Attach image for question ${index + 1}`"
+                        accept="image/*"
+                        filled
+                      >
+                        <template v-slot:prepend>
+                          <q-icon name="mdi-image" />
+                        </template>
+                      </q-file>
+                    </div>
+
                     <q-input
                       v-model="option.question"
                       :label="`Input question ${index + 1}`"
@@ -219,7 +275,7 @@
 <script>
 import { date, extend } from "quasar";
 
-import { firestore, Timestamp } from "boot/firebase";
+import { firestore, storage, Timestamp } from "boot/firebase";
 import { dateFormat } from "boot/globals";
 
 const assignmentTypes = Object.freeze([
@@ -231,10 +287,11 @@ const assignmentTypes = Object.freeze([
 
 export default {
   name: "TaskDialog",
-  props: ["value", "mode", "courseId", "assignmentId", "data"],
+  props: ["value", "mode", "courseId", "assignmentId", "data", "uploadedFiles"],
   data() {
     return {
       testVariantTab: 0,
+      assignmentFiles: [],
       assignment: {
         title: "",
         description: null,
@@ -245,6 +302,7 @@ export default {
         test: [
           [
             {
+              image: null,
               question: "",
               answers: [
                 {
@@ -277,7 +335,7 @@ export default {
   watch: {
     value: {
       immediate: false,
-      handler() {
+      async handler() {
         if (this.data) {
           this.assignment = extend(true, this.assignment, this.data);
           if (this.assignment.test) {
@@ -294,6 +352,17 @@ export default {
     },
   },
   methods: {
+    onTestImageInput(file, variantIndex, questionIndex) {
+      const fr = new FileReader();
+      fr.readAsDataURL(file);
+      fr.onloadend = () => {
+        this.$set(
+          this.assignment.test[variantIndex][questionIndex],
+          "image",
+          fr.result
+        );
+      };
+    },
     async onTaskSubmit() {
       try {
         const classworkRef = firestore
@@ -311,9 +380,12 @@ export default {
           maxMark: this.assignment.maxMark,
           allowZero: this.assignment.allowZero,
         };
+        const assignmentRef = this.assignmentId
+          ? classworkRef.doc(this.assignmentId)
+          : classworkRef.doc();
         if (this.selectedType.value === "test") {
           const res = {};
-          this.assignment.test.forEach((variant, index) => {
+          this.assignment.test.forEach(async (variant, index) => {
             res[index] = variant;
           });
           data.test = res;
@@ -323,18 +395,41 @@ export default {
         }
         if (this.assignmentId) {
           data.edited = Timestamp.now();
-          await classworkRef.doc(this.assignmentId).set(data, { merge: true });
+          await assignmentRef.set(data, { merge: true });
         } else {
           data.timestamp = Timestamp.now();
-          await classworkRef.add(data);
+          await assignmentRef.set(data);
+        }
+        const filesQueue = [];
+        this.assignmentFiles.forEach((file) => {
+          filesQueue.push(
+            storage
+              .ref()
+              .child(`files/${this.courseId}/${assignmentRef.id}`)
+              .child(file.name)
+              .put(file)
+          );
+        });
+        const res = await Promise.all(filesQueue);
+        for (const { ref } of res) {
+          this.uploadedFiles.push(ref);
         }
         this.$emit("visibility", false, this.selectedType.value);
       } catch (err) {
         this.$q.notify({ message: err.message, color: "red" });
       }
     },
+    async deleteUploadedFile(file, index) {
+      try {
+        await file.delete();
+        this.uploadedFiles.splice(index, 1);
+      } catch (err) {
+        this.$q.notify({ message: err.message, color: "red" });
+      }
+    },
     addTestQuestion(variantIndex) {
       this.assignment.test[variantIndex].push({
+        image: null,
         question: "",
         answers: [
           {
@@ -360,18 +455,10 @@ export default {
       );
     },
     addTestVariant() {
-      this.assignment.test.push([
-        {
-          question: "",
-          answers: [
-            {
-              label: "",
-              value: false,
-            },
-          ],
-        },
-      ]);
-      this.testVariantTab = this.assignment.test.length - 1;
+      const newIndex = this.assignment.test.length;
+      this.assignment.test.push([]);
+      this.addTestQuestion(newIndex);
+      this.testVariantTab = newIndex;
     },
     deleteTestVariant() {
       this.assignment.test.splice(this.testVariantTab, 1);

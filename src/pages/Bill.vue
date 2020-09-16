@@ -16,7 +16,7 @@
                 :key="groupIndex"
                 @before-show="revealGroup(id, index)"
                 :label="group"
-                caption="Choose tasks to export"
+                :caption="$t('bill.caption')"
                 :group="`${groupTasks}-${groupIndex}`"
               >
                 <q-card>
@@ -28,12 +28,12 @@
                       color="primary"
                       type="checkbox"
                     />
-                    <div v-else class="text-h5">No tasks for this group</div>
+                    <div v-else class="text-h5">{{ $t("bill.noTasks") }}</div>
                   </q-card-section>
                   <q-card-section v-if="groupTasks.length">
                     <q-btn
                       @click="createBill(id, group)"
-                      label="Download bill"
+                      :label="`${$t('bill.download')} (.csv)`"
                       color="primary"
                       class="full-width"
                     ></q-btn>

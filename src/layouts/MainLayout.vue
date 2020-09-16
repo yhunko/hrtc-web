@@ -59,7 +59,7 @@
           <q-item-section avatar>
             <q-icon name="mdi-github" />
           </q-item-section>
-          <q-item-section>Code on GitHub</q-item-section>
+          <q-item-section>{{ $t("drawer.github") }}</q-item-section>
         </q-item>
       </q-list>
       <q-img
