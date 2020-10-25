@@ -12,6 +12,10 @@ const routes = [
         path: "assignment/:courseId/:assignmentId",
         component: () => import("pages/Assignment.vue"),
       },
+      {
+        path: "todo",
+        component: () => import("pages/Todo.vue"),
+      },
     ],
   },
   {

@@ -1,64 +1,93 @@
 <template>
   <q-page v-if="course" class="flex justify-center" padding>
-    <q-card :style="{ width: $q.screen.lt.md ? '90vw' : '50vw' }" flat bordered>
+    <q-card style="width: 90vw;" flat bordered>
       <q-tabs
         v-model="tab"
         class="text-grey"
         active-color="primary"
         indicator-color="primary"
         align="justify"
-        narrow-indicator
       >
+        <q-tab :label="$t('course.tabs.all')" name="all"></q-tab>
         <q-tab
           v-for="({ value, label }, index) in assignmentTypes"
           :key="index"
           :name="value"
-          :label="$t(`course.tabs.${label}`)"
+          :label="$t(`course.tabs.${value}`)"
         />
       </q-tabs>
       <q-separator />
-      <q-card-section class="q-gutter-md">
-        <q-card
-          v-for="({ id: assignmentId, title, timestamp, description },
-          index) in filteredClasswork"
-          :key="index"
-        >
-          <q-card-section>
-            <div class="text-h6">{{ title }}</div>
-            <div class="text-subtitle2">
-              {{ timestamp | formatTimestamp }}
-            </div>
-          </q-card-section>
-          <q-separator />
-          <q-card-actions>
-            <q-btn
-              :label="$t('course.assignment.open')"
-              :to="`/assignment/${id}/${assignmentId}`"
-              flat
-            />
-          </q-card-actions>
-        </q-card>
+      <q-card-section>
+        <template v-if="filteredClasswork.length">
+          <div class="row items-start q-gutter-md">
+            <q-card
+              v-for="({ id: assignmentId, title, timestamp, due, edited, type },
+              index) in filteredClasswork"
+              :key="index"
+              bordered
+            >
+              <q-card-section>
+                <div class="text-primary text-h6">{{ title }}</div>
+                <div class="text-subtitle2">
+                  {{ timestamp | formatTimestamp }}
+                  <template v-if="edited">
+                    ({{ $t("globals.edited") }} {{ edited | formatTimestamp }})
+                  </template>
+                </div>
+                <q-chip
+                  @click="tab = type"
+                  icon="mdi-shape"
+                  color="secondary"
+                  text-color="white"
+                  clickable
+                >
+                  {{ $t(`course.tabs.${type}`) }}
+                </q-chip>
+              </q-card-section>
+              <q-separator />
+              <q-card-actions>
+                <q-btn
+                  :label="$t('course.assignment.open')"
+                  :to="`/assignment/${id}/${assignmentId}`"
+                  color="primary"
+                  icon-right="mdi-open-in-new"
+                  flat
+                />
+              </q-card-actions>
+            </q-card>
+          </div>
+        </template>
+        <div v-else class="text-center">
+          <h4>{{ $t("globals.listEmpty") }}</h4>
+        </div>
       </q-card-section>
     </q-card>
-    <q-page-sticky
-      v-if="$store.state.user.auth.uid.startsWith('t')"
-      position="bottom-right"
-      :offset="[15, 15]"
-    >
-      <q-fab
-        @click="createTaskDialog = true"
-        label="Create task"
-        color="green"
-        hide-icon
-      >
-      </q-fab>
-    </q-page-sticky>
-    <TaskDialog
-      v-model="createTaskDialog"
-      :course-id="id"
-      mode="create"
-      @visibility="changeVisibility"
-    ></TaskDialog>
+    <template v-if="$store.state.user.auth.uid.startsWith('t')">
+      <q-page-sticky position="bottom-right" :offset="[15, 15]">
+        <q-btn
+          @click="createAssignment()"
+          color="primary"
+          icon="mdi-plus"
+          padding="md"
+          :label="$t('course.createTask')"
+          no-caps
+          rounded
+        >
+        </q-btn>
+      </q-page-sticky>
+      <TaskDialog
+        v-model="taskDialog"
+        @visibility="changeVisibility"
+        :course-id="id"
+        :tab="tab"
+        :mode="taskDialogMode"
+        :data="taskDialogData"
+        :assignmentId="taskDialogAssignmentId"
+      ></TaskDialog>
+    </template>
+    <q-inner-loading :showing="loading">
+      <q-spinner size="5em" color="primary" />
+    </q-inner-loading>
   </q-page>
 </template>
 
@@ -71,6 +100,7 @@ import TaskDialog from "../components/TaskDialog.vue";
 const courses = firestore.collection("courses");
 
 const assignmentTypes = Object.freeze([
+  { value: "message", label: "Message" },
   { value: "lection", label: "Lection" },
   { value: "practical", label: "Practical" },
   { value: "test", label: "Test" },
@@ -87,8 +117,11 @@ export default {
       id: this.$route.params.courseId,
       course: null,
       classwork: null,
-      createTaskDialog: false,
-      tab: "lection",
+      taskDialog: false,
+      taskDialogMode: "create",
+      taskDialogData: null,
+      taskDialogAssignmentId: null,
+      tab: "all",
       assignment: {
         title: "",
         description: null,
@@ -97,6 +130,7 @@ export default {
         maxMark: 5,
         allowZero: false,
       },
+      loading: false,
       assignmentTypes,
       dateFormat,
     };
@@ -104,46 +138,44 @@ export default {
   watch: {
     "$route.params.courseId": {
       immediate: true,
-      handler(id) {
+      async handler(id) {
+        this.loading = true;
         const course = courses.doc(id);
-        this.$bind("course", course);
-        this.$bind(
+        await this.$bind("course", course);
+        const { uid } = this.$store.state.user.auth;
+        if (
+          uid.startsWith("s") &&
+          !this.course.groups.includes(this.$store.state.user.data.group)
+        ) {
+          this.$router.go(-1);
+        }
+        await this.$bind(
           "classwork",
           course.collection("classwork").orderBy("timestamp", "desc")
         );
+        this.loading = false;
       },
     },
   },
   computed: {
     filteredClasswork() {
-      return this.classwork.filter((item) => item.type === this.tab);
+      return this.classwork?.length
+        ? this.tab === "all"
+          ? this.classwork
+          : this.classwork.filter((item) => item.type === this.tab)
+        : [];
     },
   },
   methods: {
-    changeVisibility(visible, tab) {
-      this.createTaskDialog = visible;
+    createAssignment() {
+      this.taskDialogData = null;
+      this.taskDialogMode = "create";
+      this.taskDialog = true;
+    },
+    changeVisibility(visible, changedType, tab) {
+      this.taskDialog = visible;
       this.tab = tab;
     },
-    // async onTaskSubmit() {
-    //   try {
-    //     await courses
-    //       .doc(this.id)
-    //       .collection("classwork")
-    //       .add({
-    //         title: this.assignment.title,
-    //         description: this.assignment.description,
-    //         due: Timestamp.fromDate(
-    //           date.extractDate(this.assignment.due, this.dateFormat)
-    //         ),
-    //         timestamp: Timestamp.now(),
-    //         type: this.assignment.type.value,
-    //         maxMark: this.assignment.maxMark,
-    //       });
-    //     this.createTaskModal = false;
-    //   } catch (err) {
-    //     this.$q.notify({ message: err.message, color: "red" });
-    //   }
-    // },
   },
 };
 </script>

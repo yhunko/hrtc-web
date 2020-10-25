@@ -1,46 +1,47 @@
 <template>
   <q-page padding>
-    <q-list>
+    <q-list bordered separator>
       <q-expansion-item
         v-for="({ id, title, groups }, index) in subjects"
+        @before-show="revealGroup(id, index)"
         :key="index"
-        :label="title"
-        popup
+        :label="`${title} - ${groups.join(', ')}`"
       >
         <q-separator />
         <q-card>
           <q-card-section>
-            <q-list>
-              <q-expansion-item
-                v-for="(group, groupIndex) in groups"
-                :key="groupIndex"
-                @before-show="revealGroup(id, index)"
-                :label="group"
-                :caption="$t('bill.caption')"
-                :group="`${groupTasks}-${groupIndex}`"
-              >
-                <q-card>
-                  <q-card-section class="flex flex-center">
-                    <q-option-group
-                      v-if="groupTasks.length"
-                      v-model="groupTasksChosen"
-                      :options="groupTasks"
-                      color="primary"
-                      type="checkbox"
-                    />
-                    <div v-else class="text-h5">{{ $t("bill.noTasks") }}</div>
-                  </q-card-section>
-                  <q-card-section v-if="groupTasks.length">
-                    <q-btn
-                      @click="createBill(id, group)"
-                      :label="`${$t('bill.download')} (.csv)`"
-                      color="primary"
-                      class="full-width"
-                    ></q-btn>
-                  </q-card-section>
-                </q-card>
-              </q-expansion-item>
-            </q-list>
+            <q-btn
+              @click="selectAllTasks()"
+              :label="$t('bill.selectAll')"
+              icon="mdi-select-all"
+              flat
+            />
+            <q-btn
+              @click="deselectAllTasks()"
+              :label="$t('bill.deselectAll')"
+              icon="mdi-select"
+              flat
+            />
+          </q-card-section>
+          <q-card-section>
+            <q-option-group
+              v-if="groupTasks.length"
+              v-model="groupTasksChosen"
+              :options="groupTasks"
+              color="primary"
+              type="checkbox"
+            />
+            <div v-else class="text-h5">{{ $t("bill.noTasks") }}</div>
+          </q-card-section>
+          <q-card-section v-if="groupTasks.length">
+            <q-btn
+              @click="createBill(id, groups)"
+              :label="`${$t('bill.download')} (.csv)`"
+              :disable="!groupTasksChosen.length"
+              :loading="loading.bill"
+              color="primary"
+              class="full-width"
+            ></q-btn>
           </q-card-section>
         </q-card>
       </q-expansion-item>
@@ -62,6 +63,9 @@ export default {
       groupTasks: [],
       subjects: [],
       classwork: [],
+      loading: {
+        bill: false,
+      },
     };
   },
   async created() {
@@ -70,8 +74,8 @@ export default {
       firestore
         .collection("courses")
         .where(
-          "teacher",
-          "==",
+          "teachers",
+          "array-contains",
           firestore.collection("users").doc(this.$store.state.user.auth.uid)
         )
     );
@@ -92,10 +96,18 @@ export default {
             label: task.title,
             value: doc.id,
           });
+          this.groupTasksChosen.push(doc.id);
         });
       }
     },
-    async createBill(subjectId, group) {
+    selectAllTasks() {
+      this.groupTasksChosen = this.groupTasks.map(({ value }) => value);
+    },
+    deselectAllTasks() {
+      this.groupTasksChosen = [];
+    },
+    async createBill(subjectId, groups) {
+      this.loading.bill = true;
       const cols = ["Студент"];
       const rows = [];
       const classworkSnapshot = await firestore
@@ -104,13 +116,14 @@ export default {
         .collection("classwork")
         .where(FieldPath.documentId(), "in", this.groupTasksChosen)
         .get();
-      console.log(classworkSnapshot);
+      let classworkData = null;
       await new Promise((resolve) => {
         classworkSnapshot.forEach(async (doc) => {
-          cols.push(`${doc.data().title}`);
+          classworkData = doc.data();
+          cols.push(`${classworkData.title}`);
           const usersSnapshot = await firestore
             .collection("users")
-            .where("group", "==", group)
+            .where("group", "in", groups)
             .get();
           usersSnapshot.forEach(async (userDoc) => {
             const groupWorkSnapshot = await firestore
@@ -136,15 +149,17 @@ export default {
         (row) => `${row.join(",")}\r\n`
       )}`;
       const exportStatus = exportFile(
-        `Ведомость-${group}.csv`,
+        `Ведомость-${
+          this.subjects.find(({ id }) => id === subjectId).title
+        }-${groups.join(",")}.csv`,
         csv,
         "text/csv"
       );
+      this.loading.bill = false;
       if (exportStatus !== true) {
         this.$q.notify({
           message: "Browser denied file download...",
-          color: "negative",
-          icon: "warning",
+          type: "negative",
         });
       }
     },

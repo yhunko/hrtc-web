@@ -1,28 +1,35 @@
 import firebase from "firebase/app";
-import config from "../firebase.config";
+import { config } from "../firebase.config";
 
 import "firebase/auth";
 import "firebase/firestore";
 import "firebase/storage";
+import "firebase/messaging";
+import "firebase/functions";
 
 firebase.initializeApp(config);
 
 const auth = firebase.auth();
+
 const firestore = firebase.firestore();
-const storage = firebase.storage();
 const Timestamp = firebase.firestore.Timestamp;
 const FieldValue = firebase.firestore.FieldValue;
 const FieldPath = firebase.firestore.FieldPath;
+
+const storage = firebase.storage();
+
+const messaging = firebase.messaging();
+
+const functions = firebase.functions();
 
 export default async ({ store }) => {
   await new Promise((resolve) => {
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const dataSnapshot = await firestore
-          .collection("users")
-          .doc(user.uid)
-          .get();
-        store.commit("user/set", { user, data: dataSnapshot.data() });
+        const dataRef = firestore.collection("users").doc(user.uid);
+        const dataSnapshot = await dataRef.get();
+        const data = dataSnapshot.data();
+        store.commit("user/set", { user, data });
         resolve();
       } else {
         resolve();
@@ -31,4 +38,13 @@ export default async ({ store }) => {
   });
 };
 
-export { auth, firestore, storage, Timestamp, FieldValue, FieldPath };
+export {
+  auth,
+  firestore,
+  storage,
+  messaging,
+  functions,
+  Timestamp,
+  FieldValue,
+  FieldPath,
+};

@@ -3,15 +3,15 @@
     <q-header elevated class="bg-primary text-white">
       <q-toolbar>
         <q-toolbar-title>
-          <!-- <q-avatar>
-            <img src="https://cdn.quasar.dev/logo/svg/quasar-logo.svg" />
-          </q-avatar> -->
+          <q-avatar>
+            <q-img src="../assets/logo.png"></q-img>
+          </q-avatar>
           {{ $t("header") }}
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
     <q-page-container>
-      <q-page class="flex justify-center" padding>
+      <q-page class="flex flex-center" padding>
         <q-form
           class="q-gutter-md"
           style="width: 800px; max-width: 80vw;"

@@ -35,3 +35,5 @@ yarn-error.log*
 # Firebase stuff
 src/firebase.config.js
 .firebase
+*.log
+functions/serviceAccount.json
