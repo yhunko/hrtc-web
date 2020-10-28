@@ -270,7 +270,7 @@ export default {
       leftDrawerOpen: false,
       lang: this.$q.lang.isoName,
       langOptions: [],
-      color: null,
+      color: colors.getBrand("primary"),
       notificationsRef: null,
       notifications: [],
       user: {
@@ -309,11 +309,6 @@ export default {
       label: nativeName,
       value: isoName,
     }));
-    if (this.$q.localStorage.has("color")) {
-      const color = this.$q.localStorage.getItem("color");
-      colors.setBrand("primary", color);
-      this.color = color;
-    }
     this.notificationsRef = firestore
       .collection("notifications")
       .doc(this.user.uid)
