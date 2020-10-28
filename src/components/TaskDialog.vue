@@ -180,155 +180,160 @@
                     v-for="(variant, variantIndex) in assignment.test"
                     :key="variantIndex"
                     :name="variantIndex"
+                    class="q-col-gutter-md"
                   >
-                    <div
-                      v-for="(option, index) in variant"
-                      :key="index"
-                      class="q-col-gutter-md"
-                    >
+                    <div v-for="(option, index) in variant" :key="index">
                       <div class="q-col-gutter-md">
-                        <q-img
-                          v-if="option.image && dataImages[variantIndex]"
-                          :src="dataImages[variantIndex][index]"
-                        >
-                          <div class="absolute-top-right">
-                            <q-btn
-                              @click="
-                                removeImage(option.image, variantIndex, index)
-                              "
-                              icon="mdi-close"
-                              dense
-                              round
-                              flat
-                            >
-                              <q-tooltip>
-                                {{
-                                  $t(
-                                    "taskDialog.test.image.tooltips.deleteImage"
-                                  )
-                                }}
-                              </q-tooltip>
-                            </q-btn>
-                          </div>
-                        </q-img>
-                        <q-file
-                          v-else
-                          @input="onTestImageInput($event, variantIndex, index)"
-                          :label="$t('taskDialog.test.image.add', [index + 1])"
-                          accept="image/*"
-                          filled
-                        >
-                          <template v-slot:prepend>
-                            <q-icon name="mdi-image" />
-                          </template>
-                        </q-file>
-                      </div>
-
-                      <div
-                        v-if="option.question.includes('$$')"
-                        :key="`${option.question}-${index}`"
-                        class="flex flex-center q-py-md"
-                        v-katex:auto
-                      >
-                        {{ option.question }}
-                      </div>
-
-                      <div class="row q-gutter-x-sm q-gutter-y-md">
-                        <q-input
-                          v-model="option.question"
-                          :label="$t('taskDialog.test.inputQuestion')"
-                          :prefix="`${index + 1}) `"
-                          type="text"
-                          autogrow
-                          filled
-                        >
-                          <template v-slot:append>
-                            <q-btn
-                              @click="deleteTestQuestion(variantIndex, index)"
-                              dense
-                              flat
-                              round
-                              icon="mdi-delete"
-                            >
-                              <q-tooltip>
-                                {{ $t("taskDialog.test.deleteQuestion") }}
-                              </q-tooltip>
-                            </q-btn>
-                          </template>
-                        </q-input>
-
-                        <q-input
-                          v-model.number="option.points"
-                          :label="$t('taskDialog.test.pointsAmount')"
-                          type="number"
-                          filled
-                        />
-                      </div>
-
-                      <div class="q-mx-lg q-py-xs q-gutter-sm">
-                        <template
-                          v-for="(answer, answerIndex) in option.answers"
-                        >
-                          <div :key="answerIndex">
-                            <div
-                              v-if="answer.label.includes('$$')"
-                              :key="`${answer.label}-${answerIndex}`"
-                              class="flex flex-center q-py-sm"
-                              v-katex:auto
-                            >
-                              {{ answer.label }}
-                            </div>
-                            <q-input
-                              v-model="answer.label"
-                              :prefix="`${index + 1}.${answerIndex + 1}) `"
-                              type="text"
-                              autogrow
-                              filled
-                            >
-                              <template v-slot:after>
-                                <q-btn
-                                  @click="
-                                    deleteTestAnswer(
-                                      variantIndex,
-                                      index,
-                                      answerIndex
+                        <div>
+                          <q-img
+                            v-if="option.image && dataImages[variantIndex]"
+                            :src="dataImages[variantIndex][index]"
+                          >
+                            <div class="absolute-top-right">
+                              <q-btn
+                                @click="
+                                  removeImage(option.image, variantIndex, index)
+                                "
+                                icon="mdi-close"
+                                dense
+                                round
+                                flat
+                              >
+                                <q-tooltip>
+                                  {{
+                                    $t(
+                                      "taskDialog.test.image.tooltips.deleteImage"
                                     )
-                                  "
-                                  icon="mdi-delete"
-                                  dense
-                                  flat
-                                  round
-                                >
-                                  <q-tooltip>
-                                    {{ $t("taskDialog.test.deleteAnswer") }}
-                                  </q-tooltip>
-                                </q-btn>
-                              </template>
-                              <template v-slot:before>
-                                <q-checkbox
-                                  v-model="option.answers[answerIndex].value"
-                                  filled
-                                />
-                              </template>
-                            </q-input>
-                          </div>
-                        </template>
+                                  }}
+                                </q-tooltip>
+                              </q-btn>
+                            </div>
+                          </q-img>
+                          <q-file
+                            v-else
+                            @input="
+                              onTestImageInput($event, variantIndex, index)
+                            "
+                            :label="
+                              $t('taskDialog.test.image.add', [index + 1])
+                            "
+                            accept="image/*"
+                            filled
+                          >
+                            <template v-slot:prepend>
+                              <q-icon name="mdi-image" />
+                            </template>
+                          </q-file>
+                        </div>
 
-                        <q-btn
-                          @click="addTestAnswer(variantIndex, index)"
-                          :label="$t('taskDialog.test.addAnswer')"
-                          class="q-mt-md full-width"
-                          color="primary"
-                        />
+                        <div
+                          v-if="option.question.includes('$$')"
+                          :key="`${option.question}-${index}`"
+                          class="flex flex-center q-py-md"
+                          v-katex:auto
+                        >
+                          {{ option.question }}
+                        </div>
+
+                        <div class="row q-gutter-x-sm">
+                          <q-input
+                            v-model="option.question"
+                            :label="$t('taskDialog.test.inputQuestion')"
+                            :prefix="`${index + 1}) `"
+                            class="col"
+                            type="text"
+                            autogrow
+                            filled
+                          >
+                            <template v-slot:append>
+                              <q-btn
+                                @click="deleteTestQuestion(variantIndex, index)"
+                                dense
+                                flat
+                                round
+                                icon="mdi-delete"
+                              >
+                                <q-tooltip>
+                                  {{ $t("taskDialog.test.deleteQuestion") }}
+                                </q-tooltip>
+                              </q-btn>
+                            </template>
+                          </q-input>
+
+                          <q-input
+                            v-model.number="option.points"
+                            :label="$t('taskDialog.test.pointsAmount')"
+                            class="col-auto"
+                            type="number"
+                            filled
+                          />
+                        </div>
+
+                        <div class="q-mx-lg q-gutter-sm">
+                          <template
+                            v-for="(answer, answerIndex) in option.answers"
+                          >
+                            <div :key="answerIndex">
+                              <div
+                                v-if="answer.label.includes('$$')"
+                                :key="`${answer.label}-${answerIndex}`"
+                                class="flex flex-center q-py-sm"
+                                v-katex:auto
+                              >
+                                {{ answer.label }}
+                              </div>
+                              <q-input
+                                v-model="answer.label"
+                                :prefix="`${index + 1}.${answerIndex + 1}) `"
+                                type="text"
+                                autogrow
+                                filled
+                              >
+                                <template v-slot:after>
+                                  <q-btn
+                                    @click="
+                                      deleteTestAnswer(
+                                        variantIndex,
+                                        index,
+                                        answerIndex
+                                      )
+                                    "
+                                    icon="mdi-delete"
+                                    dense
+                                    flat
+                                    round
+                                  >
+                                    <q-tooltip>
+                                      {{ $t("taskDialog.test.deleteAnswer") }}
+                                    </q-tooltip>
+                                  </q-btn>
+                                </template>
+                                <template v-slot:before>
+                                  <q-checkbox
+                                    v-model="option.answers[answerIndex].value"
+                                    filled
+                                  />
+                                </template>
+                              </q-input>
+                            </div>
+                          </template>
+
+                          <q-btn
+                            @click="addTestAnswer(variantIndex, index)"
+                            :label="$t('taskDialog.test.addAnswer')"
+                            class="full-width"
+                            color="primary"
+                          />
+                        </div>
+                        <div>
+                          <q-btn
+                            @click="addTestQuestion(variantIndex)"
+                            :label="$t('taskDialog.test.addQuestion')"
+                            class="full-width"
+                            color="primary"
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <q-btn
-                        @click="addTestQuestion(variantIndex)"
-                        :label="$t('taskDialog.test.addQuestion')"
-                        class="q-mt-xs full-width"
-                        color="primary"
-                      />
                     </div>
                   </q-tab-panel>
                 </q-tab-panels>
