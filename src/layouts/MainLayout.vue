@@ -201,7 +201,7 @@
           <q-item-section avatar side>
             <q-avatar color="primary" class="cursor-pointer">
               <q-popup-proxy transition-show="scale" transition-hide="scale">
-                <q-color v-model="color" />
+                <q-color v-model="color" default-view="palette" no-header />
               </q-popup-proxy>
             </q-avatar>
           </q-item-section>
