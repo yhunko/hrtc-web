@@ -93,6 +93,12 @@ export default {
         label: "Delete variant {0}",
         noVariantToDelete: "No variant to delete",
       },
+      image: {
+        add: "Attach image for question {0}",
+        tooltips: {
+          deleteImage: "Delete image",
+        },
+      },
       variant: "Variant {0}",
       inputQuestion: "Input question",
       deleteQuestion: "Delete question",

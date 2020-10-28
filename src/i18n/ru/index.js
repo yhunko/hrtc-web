@@ -90,6 +90,12 @@ export default {
         label: "Удалить вариант {0}",
         noVariantToDelete: "Нет варианта для удаления",
       },
+      image: {
+        add: "Прикрепите изображение к вопросу № {0}",
+        tooltips: {
+          deleteImage: "Удалить изображение",
+        },
+      },
       variant: "Вариант {0}",
       inputQuestion: "Введите вопрос",
       deleteQuestion: "Удалить вопрос",

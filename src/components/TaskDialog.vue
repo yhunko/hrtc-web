@@ -186,25 +186,35 @@
                       :key="index"
                       class="q-col-gutter-md"
                     >
-                      <!-- <div class="q-mb-md">
+                      <div class="q-col-gutter-md">
                         <q-img
                           v-if="option.image && dataImages[variantIndex]"
                           :src="dataImages[variantIndex][index]"
                         >
                           <div class="absolute-top-right">
                             <q-btn
-                              @click="removeImage(option, variantIndex, index)"
+                              @click="
+                                removeImage(option.image, variantIndex, index)
+                              "
                               icon="mdi-close"
                               dense
                               round
                               flat
-                            />
+                            >
+                              <q-tooltip>
+                                {{
+                                  $t(
+                                    "taskDialog.test.image.tooltips.deleteImage"
+                                  )
+                                }}
+                              </q-tooltip>
+                            </q-btn>
                           </div>
                         </q-img>
                         <q-file
                           v-else
                           @input="onTestImageInput($event, variantIndex, index)"
-                          :label="`Attach image for question ${index + 1}`"
+                          :label="$t('taskDialog.test.image.add', [index + 1])"
                           accept="image/*"
                           filled
                         >
@@ -212,7 +222,7 @@
                             <q-icon name="mdi-image" />
                           </template>
                         </q-file>
-                      </div> -->
+                      </div>
 
                       <div
                         v-if="option.question.includes('$$')"
@@ -565,25 +575,31 @@ export default {
       };
     },
 
-    async removeImage(option, variantIndex, questionIndex) {
-      if (typeof option.image === "string") {
-        console.log(variantIndex, questionIndex);
-        // await firestore
-        //   .collection("courses")
-        //   .doc(this.courseId)
-        //   .collection("classwork")
-        //   .doc(this.assignmentId)
-        //   .update({
-        //     ["test." +
-        //     variantIndex +
-        //     "." +
-        //     questionIndex +
-        //     ".image"]: FieldValue.delete(),
-        //   });
-        // await storage.ref(option.image).delete();
+    async removeImage(image, variantIndex, questionIndex) {
+      this.$set(
+        this.assignment.test[variantIndex][questionIndex],
+        "image",
+        null
+      );
+      if (typeof image === "string") {
+        const res = {};
+        this.assignment.test.forEach((variant, index) => {
+          res[index] = variant;
+        });
+        await firestore
+          .collection("courses")
+          .doc(this.courseId)
+          .collection("classwork")
+          .doc(this.assignmentId)
+          .set(
+            {
+              test: res,
+            },
+            { merge: true }
+          );
+        await storage.ref(image).delete();
       }
-      option.image = null;
-      delete this.dataImages[variantIndex][questionIndex];
+      this.$delete(this.dataImages[variantIndex], questionIndex);
     },
 
     async onTaskSubmit() {
