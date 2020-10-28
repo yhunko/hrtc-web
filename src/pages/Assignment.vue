@@ -99,6 +99,7 @@
                           </span>
                         </div>
                       </q-card-section>
+
                       <template v-if="assignment.conferenceEnabled">
                         <q-separator />
                         <q-card-section>
@@ -128,10 +129,13 @@
                           </div>
                         </q-card-section>
                       </template>
+
                       <q-separator></q-separator>
-                      <q-card-section>
-                        <q-markdown :src="assignment.description"></q-markdown>
-                      </q-card-section>
+
+                      <q-card-section
+                        v-html="assignment.description"
+                      ></q-card-section>
+
                       <template
                         v-if="
                           assignmentUploadedFiles &&
