@@ -223,11 +223,21 @@
           </q-item-section>
         </q-item>
         <q-separator spaced />
-        <q-item @click="openGitHub()" clickable v-ripple>
+        <q-item
+          @click="openURL('https://github.com/yegorgunko/hrtc-web/issues/new')"
+          clickable
+          v-ripple
+        >
           <q-item-section avatar>
             <q-icon name="mdi-github" />
           </q-item-section>
           <q-item-section>{{ $t("main.drawer.github") }}</q-item-section>
+        </q-item>
+        <q-item @click="openURL('https://t.me/yegorgunko')" clickable v-ripple>
+          <q-item-section avatar>
+            <q-icon name="mdi-telegram" />
+          </q-item-section>
+          <q-item-section>{{ $t("main.drawer.telegram") }}</q-item-section>
         </q-item>
       </q-list>
       <q-img
@@ -331,11 +341,8 @@ export default {
     setTheme() {
       this.$q.dark.toggle();
     },
-    openGitHub() {
-      window.open(
-        "https://github.com/yegorgunko/hrtc-web/issues/new",
-        "_blank"
-      );
+    openURL(url) {
+      window.open(url, "_blank");
     },
     async markNotificationAsRead(id) {
       try {

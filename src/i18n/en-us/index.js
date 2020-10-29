@@ -31,6 +31,7 @@ export default {
       home: "Home",
       bill: "Bill",
       github: "Report an issue",
+      telegram: "Contact developer",
       appColor: "App color",
       darkTheme: "Dark theme",
       todo: "Todo",
