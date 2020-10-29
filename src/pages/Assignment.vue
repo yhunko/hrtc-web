@@ -411,7 +411,9 @@
                             </q-btn>
                           </template>
                         </q-input>
-                        <q-list v-if="privateComments.replies">
+                        <q-list
+                          v-if="privateComments && privateComments.replies"
+                        >
                           <q-item
                             v-for="({ text, user: { displayName }, timestamp },
                             index) in sortedPrivateComments"
@@ -716,7 +718,7 @@
                 </q-btn>
               </template>
             </q-input>
-            <q-list v-if="privateComments.replies">
+            <q-list v-if="privateComments && privateComments.replies">
               <q-item
                 v-for="({ text, user: { displayName }, timestamp },
                 index) in sortedPrivateComments"
