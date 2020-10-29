@@ -32,11 +32,8 @@ yarn-error.log*
 *.njsproj
 *.sln
 
-# Firebase config
+# Firebase stuff
 src/firebase.config.js
-
-# Users file
-users.json
-
-# Users import script
-usersImport.sh
+.firebase
+*.log
+functions/serviceAccount.json

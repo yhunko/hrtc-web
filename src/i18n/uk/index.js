@@ -1,0 +1,183 @@
+// Ukrainian
+
+export default {
+  globals: {
+    open: "Відкрити",
+    close: "Закрити",
+    edited: "змінено",
+    listEmpty: "Список порожній",
+    due: "До",
+  },
+  welcome: "Ласкаво просимо!",
+  header: "Дистанційне навчання ХРТК",
+  files: "Файли",
+  filesMissing: "Файли відсутні",
+  mark: "Оцінка",
+  main: {
+    toolbar: {
+      notifications: "Повідомлення",
+      notificationsListEmpty: "Список повідомлень порожній",
+      tooltips: {
+        deleteRead: "Видалити прочитані повідомлення",
+        markAllAsRead: "Відмітити все як прочитане",
+        markAsUnread: "Відмітити все як непрочитане",
+        markAsRead: "Відмітити як прочитане",
+        lang: "Мова",
+        logout: "Вийти з аккаунта",
+      },
+    },
+
+    drawer: {
+      home: "Головна",
+      bill: "Відомість",
+      github: "Повідомити про проблему",
+      telegram: "Написати розробнику",
+      appColor: "Колір додатку",
+      darkTheme: "Темна тема",
+      todo: "Список справ",
+    },
+  },
+
+  auth: {
+    email: {
+      label: "Вкажіть адресу електронної пошти",
+      wrong: "Будь ласка, вкажіть дійсну адресу електронної пошти",
+    },
+    password: "Введіть пароль",
+    login: "Увiйти",
+  },
+
+  index: {
+    classesList: "Список предметів",
+    course: {
+      open: "Відкрити завдання",
+    },
+    admin: {
+      teachers: "Викладачі",
+    },
+  },
+
+  course: {
+    tabs: {
+      all: "Все",
+      message: "Повідомлення",
+      lection: "Лекція",
+      practical: "Практика",
+      test: "Tест",
+      acw: "Адміністративна контрольна робота",
+    },
+    assignment: {
+      open: "Відкрити завдання",
+    },
+    createTask: "Створити завдання",
+  },
+
+  taskDialog: {
+    creating: "Створення завдання",
+    editing: "Редагування завдання",
+    title: "Заголовок",
+    description: {
+      label: "Опис",
+      hint: "Підтримує {0} та {1}",
+    },
+    type: "Тип завдання",
+    conferenceEnabled: "Додати посилання на конференцію?",
+    conferenceURL: "Посилання на конференцію",
+    addFiles: "Додати файли",
+    uploadedFiles: "Завантажені файли",
+    test: {
+      addVariant: "Додати варіант",
+      deleteVariant: {
+        label: "Видалити варіант {0}",
+        noVariantToDelete: "Немає варіанту для видалення",
+      },
+      image: {
+        add: "Прикріпіть зображення до питання № {0}",
+        tooltips: {
+          deleteImage: "Видалити зображення",
+        },
+      },
+      variant: "Варіант {0}",
+      inputQuestion: "Введіть питання",
+      deleteQuestion: "Видалити питання",
+      pointsAmount: "Кількість балів",
+      inputAnswer: "Введіть відповідь",
+      deleteAnswer: "Видалити відповідь",
+      addAnswer: "Додати відповідь",
+      addQuestion: "Додати питання",
+      maxMark: "Максимальна оцінка",
+      allowZeroMark: "Дозволити виставлення нуля",
+      due: {
+        tooltips: {
+          pickDate: "Оберіть дату",
+          pickTime: "Оберіть час",
+        },
+      },
+      create: "Створити",
+      update: "Оновити",
+    },
+  },
+
+  assignment: {
+    tabs: {
+      assignment: "Завдання",
+      studentsWork: "Роботи студентів",
+    },
+    deleteAssignment: "Видалити завдання",
+    description: "Опис завдання",
+    pinnedFiles: "Прикріплені файли",
+    comment: "Введіть коментар",
+    student: {
+      yourWork: "Ваша робота",
+      gradeSet: "Оцінка",
+      turnedIn: "Здано",
+      turnedInLate: "Здано з запізненням",
+      missing: "Не здано",
+      assigned: "Призначено",
+      test: {
+        label: "Тест (варiант {0})",
+        question: {
+          label: "Питання",
+        },
+        timeIsOver: "Час вийшов",
+        viewTest: "Подивитись відповіді на тест",
+        takeTest: "Пройти тест",
+      },
+      pickFiles: "Вибрати файли для завантаження",
+      unsubmit: "Скасувати відправку",
+      turnIn: "Здати",
+    },
+    privateComment: "Введіть особистий коментар",
+    teacher: {
+      openWork: "Відкрити роботу",
+      studentsWork: "Студентська робота",
+      status: "Статус",
+      seen: "Переглянуто",
+      turnedIn: "Здано",
+      turnedInOnTime: "Здано вчасно",
+      edited: "Відредаговано",
+      studentsWhoDidntOpen: "Студенти, які не переглядали завдання",
+      test: "Тест",
+      testResults: "Результати теста: {0} баллів з {1}",
+      viewTestAnswers: "Подивитись відповіді",
+    },
+    tooltips: {
+      editAssignment: "Редагувати завдання",
+      sendPublicComment: "Відправити публічний коментар",
+      deleteComment: "Видалити коментар",
+      uploadFiles: "Завантажити файли",
+      deleteFile: "Видалити файл",
+      sendPrivateComment: "Відправити приватний коментар",
+    },
+  },
+  bill: {
+    caption: "Додати завдання в відомість",
+    noTasks: "Завдання для цієї групи відсутні",
+    download: "Завантажити відомість",
+    selectAll: "Вибрати все",
+    deselectAll: "Прибрати виділення з усього",
+  },
+  errors: {
+    empty: "Це поле не може бути порожнім",
+  },
+};

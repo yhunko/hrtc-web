@@ -22,11 +22,13 @@ export default {
       langOptions: [
         { value: "en-us", label: "English" },
         { value: "ru", label: "Русский" },
+        { value: "ua", label: "Українська" },
       ],
     };
   },
   watch: {
     lang(lang) {
+      this.$q.localStorage.set("lang", lang);
       this.$i18n.locale = lang;
     },
   },

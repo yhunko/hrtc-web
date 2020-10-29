@@ -7,25 +7,33 @@
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
-    "dev": "quasar dev"
+    "dev": "quasar dev -m pwa",
+    "build": "quasar build -m pwa",
+    "deploy": "firebase deploy --except functions",
+    "deploy:functions": "firebase deploy --only functions"
   },
   "dependencies": {
-    "@quasar/extras": "^1.0.0",
+    "@quasar/extras": "^1.9.10",
     "core-js": "^3.6.5",
-    "firebase": "^7.16.0",
-    "quasar": "^1.0.0",
+    "date-fns": "^2.15.0",
+    "firebase": "^7.18.0",
+    "katex": "^0.12.0",
+    "quasar": "^1.14.3",
+    "quasar-app-extension-firebase-messaging": "^0.1.1",
     "vue-i18n": "^8.0.0",
+    "vue-katex": "^0.5.0",
     "vuefire": "^2.2.3"
   },
   "devDependencies": {
-    "@quasar/app": "^2.0.0",
+    "@quasar/app": "^2.1.6",
     "babel-eslint": "^10.0.1",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-loader": "^3.0.3",
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-vue": "^6.1.2",
-    "prettier": "2.0.5"
+    "prettier": "2.0.5",
+    "workbox-webpack-plugin": "^5.0.0"
   },
   "browserslist": [
     "last 10 Chrome versions",

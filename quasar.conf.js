@@ -18,7 +18,7 @@ module.exports = function (/* ctx */) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://quasar.dev/quasar-cli/boot-files
-    boot: ["globals", "firebase", "vuefire", "i18n"],
+    boot: ["globals", "firebase", "vuefire", "i18n", "quasar-lang-pack"],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
     css: ["app.scss"],
@@ -72,7 +72,7 @@ module.exports = function (/* ctx */) {
     devServer: {
       https: false,
       port: 8080,
-      open: true, // opens browser window automatically
+      open: true, // opens browser window automatically,
     },
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
@@ -87,7 +87,7 @@ module.exports = function (/* ctx */) {
       importStrategy: "auto",
 
       // Quasar plugins
-      plugins: ["Notify"],
+      plugins: ["Notify", "LocalStorage", "Loading", "Dialog"],
     },
 
     // animations: 'all', // --- includes all animations
