@@ -873,6 +873,8 @@
 </template>
 
 <script>
+import Vue from "vue";
+
 import {
   firestore,
   storage,
@@ -891,7 +893,7 @@ import TaskDialog from "../components/TaskDialog.vue";
 import sendMessage from "../functions/sendMessage";
 import getTestImg from "../functions/getTestImg";
 
-export default {
+export default Vue.extend({
   name: "Assignment",
   components: {
     TaskDialog,
@@ -1360,5 +1362,5 @@ export default {
       }
     },
   },
-};
+});
 </script>
