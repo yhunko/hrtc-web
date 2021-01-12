@@ -7,6 +7,7 @@ export default {
     edited: "изменено",
     listEmpty: "Список пуст",
     due: "До",
+    list: "Список",
   },
   welcome: "Добро пожаловать!",
   header: "Дистанционное обучение ХРТК",

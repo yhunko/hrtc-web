@@ -7,6 +7,7 @@ export default {
     edited: "edited",
     listEmpty: "List is empty",
     due: "Due",
+    list: "List",
   },
   welcome: "Welcome!",
   header: "KRTC distance learning",
