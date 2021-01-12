@@ -37,9 +37,6 @@ export default {
       todo: "Todo",
     },
   },
-  tooltips: {
-    editAssignment: "Edit assignment",
-  },
 
   auth: {
     email: {
@@ -127,7 +124,6 @@ export default {
       studentsWork: "Students' work",
     },
     deleteAssignment: "Delete assignment",
-    due: "Due",
     description: "Assignment description",
     pinnedFiles: "Pinned files",
     comment: "Input comment",
