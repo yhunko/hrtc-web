@@ -451,6 +451,8 @@
 </template>
 
 <script>
+import Vue from "vue";
+
 import { date, extend } from "quasar";
 
 import { firestore, storage, Timestamp } from "boot/firebase";
@@ -470,7 +472,7 @@ const testQuestion = {
   ],
 };
 
-export default {
+export default Vue.extend({
   name: "TaskDialog",
   props: [
     "value",
@@ -733,8 +735,10 @@ export default {
           );
         });
         const res = await Promise.all(filesQueue);
-        for (const { ref } of res) {
-          this.uploadedFiles.push(ref);
+        if (this.uploadedFiles) {
+          for (const { ref } of res) {
+            this.uploadedFiles.push(ref);
+          }
         }
         this.loading.submitting = false;
         this.$emit(
@@ -802,5 +806,5 @@ export default {
       });
     },
   },
-};
+});
 </script>
