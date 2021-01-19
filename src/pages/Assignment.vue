@@ -1179,6 +1179,7 @@ export default Vue.extend({
               },
               { merge: true }
             );
+          this.privateComment = "";
         } catch (err) {
           this.$q.notify({ message: err.message, type: "negative" });
         }
