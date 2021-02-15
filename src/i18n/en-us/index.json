@@ -108,7 +108,9 @@
         }
       },
       "create": "Create",
-      "update": "Update"
+      "update": "Update",
+      "export": "Export test",
+      "import": "Import test"
     }
   },
   "assignment": {

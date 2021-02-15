@@ -162,14 +162,30 @@
             </q-list>
 
             <template v-if="selectedType.value === 'test'">
-              <div class="q-px-lg q-py-xs">
+              <div class="q-px-lg q-py-xs q-gutter-y-md">
+                <div v-if="isCreate" class="row q-gutter-x-md">
+                  <q-btn
+                    @click="exportTest()"
+                    :label="$t('taskDialog.test.export')"
+                    color="primary"
+                    class="col"
+                  />
+                  <q-file
+                    @input="importTest"
+                    :label="$t('taskDialog.test.import')"
+                    accept=".json"
+                    color="primary"
+                    class="col"
+                    filled
+                  />
+                </div>
+                <q-separator />
                 <div class="row q-gutter-x-md">
                   <q-btn
                     @click="addTestVariant()"
                     :label="$t('taskDialog.test.addVariant')"
                     color="primary"
                     class="col"
-                    style="width: 100%;"
                   />
 
                   <q-btn
@@ -184,7 +200,6 @@
                     :disable="testVariantTab < 0"
                     color="negative"
                     class="col"
-                    style="width: 100%;"
                   />
                 </div>
 
@@ -453,7 +468,7 @@
 <script>
 import Vue from "vue";
 
-import { date, extend } from "quasar";
+import { date, extend, exportFile } from "quasar";
 
 import { firestore, storage, Timestamp } from "boot/firebase";
 import { dateFormat } from "boot/globals";
@@ -804,6 +819,19 @@ export default Vue.extend({
         type: "negative",
         message: "Selected files exceed file size limit",
       });
+    },
+
+    exportTest() {
+      exportFile(
+        "test-save.json",
+        JSON.stringify(this.assignment.test),
+        "application/json"
+      );
+    },
+
+    async importTest(ev) {
+      const content = await ev.text();
+      this.assignment.test = JSON.parse(content);
     },
   },
 });
