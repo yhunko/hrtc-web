@@ -1,6 +1,6 @@
-import enUS from "./en-us";
-import ru from "./ru";
-import uk from "./uk";
+import enUS from "./en-us/index.json";
+import ru from "./ru/index.json";
+import uk from "./uk/index.json";
 
 export default {
   "en-us": enUS,

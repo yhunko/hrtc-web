@@ -1,6 +1,25 @@
 <template>
   <q-page v-if="course" class="flex justify-center" padding>
     <q-card style="width: 90vw;" flat bordered>
+      <div class="flex items-center q-gutter-sm q-pa-md">
+        <span class="text-h5">{{ course.title }}</span>
+        <q-separator vertical />
+        <span class="text-h6">{{ course.groups.join(", ") }}</span>
+        <q-btn-dropdown
+          color="primary"
+          :label="$t('globals.list')"
+          icon="mdi-format-list-bulleted"
+          split
+        >
+          <q-list>
+            <q-item v-for="(name, index) in studentsList" :key="index">
+              <q-item-section>
+                <q-item-label>{{ name }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+      </div>
       <q-tabs
         v-model="tab"
         class="text-grey"
@@ -116,6 +135,7 @@ export default {
     return {
       id: this.$route.params.courseId,
       course: null,
+      studentsList: [],
       classwork: null,
       taskDialog: false,
       taskDialogMode: "create",
@@ -153,6 +173,13 @@ export default {
           "classwork",
           course.collection("classwork").orderBy("timestamp", "desc")
         );
+        const studentsSnap = await firestore
+          .collection("users")
+          .where("group", "in", this.course.groups)
+          .get();
+        studentsSnap.forEach((doc) => {
+          this.studentsList.push(doc.data().displayName);
+        });
         this.loading = false;
       },
     },
